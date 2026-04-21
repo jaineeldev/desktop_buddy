@@ -1,14 +1,12 @@
 # 🐾 DesktopBuddy
 
-A cross-platform animated desktop mascot with personality and system stats.
-
----
+A cute animated desktop mascot with personality and system stats, built for Windows.
 
 ## 🎯 What This Is
 
-DesktopBuddy is a cute animated mascot that lives on your desktop. It reacts to what your computer is doing, displays system stats with personality, and interacts with you. It's built with a hybrid stack — a modern web frontend for the UI, and a C backend for low-level system access.
+DesktopBuddy is an animated mascot that lives on your desktop. It reacts to what your computer is doing, displays system stats with personality, and interacts with you. It's built with a hybrid stack — a modern web frontend for the UI, and a C backend for low-level system access.
 
----
+> **Built for Windows first.** Linux and macOS support may come later as a stretch goal, but isn't planned right now.
 
 ## 🧱 Tech Stack
 
@@ -18,13 +16,11 @@ DesktopBuddy is a cute animated mascot that lives on your desktop. It reacts to 
 | Desktop Shell | Electron + Vite | Frameless window, tray, OS integration |
 | Styling | Tailwind CSS | Stat HUD, speech bubbles, settings panel |
 | State | Zustand | Buddy mood/state machine |
-| System Stats | C (native Node addon via `node-addon-api`) | CPU, RAM, temps |
+| System Stats | C (native Node addon via `node-addon-api`) | CPU, RAM, temps via Windows API |
 | Persistence | electron-store | Settings, buddy name, preferences |
 | Build | electron-vite | Unified Electron + Vite + TS build |
 
----
-
-## 📂 Project Structure
+## 📂 Planned Project Structure
 
 ```
 desktopbuddy/
@@ -57,20 +53,16 @@ desktopbuddy/
 └── electron.vite.config.ts
 ```
 
----
-
 ## 🗺️ Roadmap
 
 ### Phase 0 — C Fundamentals
 > Before writing any app code, build a foundation in C.
 
-- [ ] Complete CS50x Week 1–4 (free at cs50.harvard.edu)
+- [ ] Watch [Bro Code — C Programming Full Course](https://www.youtube.com/watch?v=xND0t1pr3KY) — focus on: variables, functions, loops, arrays, structs, pointers, file I/O, malloc
 - [ ] Understand variables, types, pointers, structs, `malloc`/`free`, file I/O
-- [ ] Write a C program that reads `/proc/meminfo` and prints RAM usage to the terminal
+- [ ] Write a C program that reads Windows API memory info and prints RAM usage to the terminal
 - [ ] Write a C struct that holds `cpu_percent`, `ram_used_mb`, `ram_total_mb`
 - [ ] Be able to explain what a pointer is and why C has no garbage collector
-
----
 
 ### Phase 1 — Project Scaffold
 > Get a transparent, frameless Electron window on screen with a placeholder mascot.
@@ -80,8 +72,6 @@ desktopbuddy/
 - [ ] Implement drag-to-move via mouse events
 - [ ] Add system tray icon with show/hide/quit
 - [ ] Render a placeholder mascot (a coloured shape is fine to start)
-
----
 
 ### Phase 2 — Mascot Animation System
 > A living mascot with at least 3 animation states.
@@ -93,19 +83,15 @@ desktopbuddy/
 - [ ] Click interaction triggers `happy` state + a speech bubble
 - [ ] Build `SpeechBubble` component (appears, holds, fades out)
 
----
-
 ### Phase 3 — C Stats Module
-> Write real C that reads system stats and exposes it to Electron.
+> Write real C that reads system stats via the Windows API and exposes it to Electron.
 
 - [ ] Set up `node-addon-api` in the project
-- [ ] Write `stats.c` — reads `/proc/stat` for CPU usage
-- [ ] Write `stats.c` — reads `/proc/meminfo` for RAM usage
+- [ ] Write `stats.c` — reads CPU usage via `GetSystemTimes`
+- [ ] Write `stats.c` — reads RAM usage via `GlobalMemoryStatusEx`
 - [ ] Compile to a `.node` native addon
 - [ ] Create `stats-bridge.ts` — IPC handler that calls the C addon
 - [ ] Create `useSystemStats` hook that polls via IPC every 2 seconds
-
----
 
 ### Phase 4 — Stat HUD
 > The mascot shows a compact stats panel on click or hover.
@@ -114,8 +100,6 @@ desktopbuddy/
 - [ ] Display CPU %, RAM used/total, current time
 - [ ] Animate in/out with Framer Motion `AnimatePresence`
 - [ ] Mascot reacts to stats: high CPU → `stressed`, low RAM → `sleepy`
-
----
 
 ### Phase 5 — Personality & Dialogue
 > The buddy says things, has a name, and notices stuff.
@@ -126,38 +110,30 @@ desktopbuddy/
 - [ ] Time-aware greetings (morning / afternoon / evening / late night)
 - [ ] Settings panel: name, scale, opacity, stat toggles
 
----
+### Phase 6 — Polish & Release
+> Wrap it up into something shareable.
 
-### Phase 6 — Cross-Platform Support
-> Works on Linux, Windows, and macOS.
-
-- [ ] Abstract stats module: `/proc` on Linux, Windows API on Windows
-- [ ] Handle `#ifdef _WIN32` / `#ifdef __linux__` in C code
-- [ ] Test tray behaviour across platforms
-- [ ] Handle auto-start on login per OS
-- [ ] Package with `electron-builder` for all targets
-
----
-
-### Phase 7 — Customisation & Characters
-> Multiple buddies, skins, and moddability.
-
-- [ ] Design at least 2 full buddy characters
+- [ ] Package with `electron-builder` for Windows
+- [ ] Auto-start on login
+- [ ] At least 2 buddy character options
 - [ ] JSON manifest per character: sprite paths + dialogue pools
-- [ ] In-app character switcher
 - [ ] Exportable/shareable config files
 
----
+### Stretch Goal — Cross-Platform
+> Not planned, but possible later.
+
+- [ ] Abstract stats module for Linux (`/proc/stat`, `/proc/meminfo`)
+- [ ] Handle `#ifdef _WIN32` / `#ifdef __linux__` in C code
+- [ ] Test tray behaviour on Linux and macOS
+- [ ] Package for Linux and macOS targets
 
 ## 📖 Resources
 
-- **C fundamentals:** [CS50x](https://cs50.harvard.edu/x)
+- **C fundamentals:** [Bro Code — C Full Course (YouTube)](https://www.youtube.com/watch?v=xND0t1pr3KY)
 - **C reference:** [Beej's Guide to C Programming](https://beej.us/guide/bgc/)
 - **Electron:** [Electron Quick Start](https://www.electronjs.org/docs/latest/tutorial/quick-start)
 - **Framer Motion:** [motion.dev/docs](https://motion.dev/docs)
 - **Zustand:** [github.com/pmndrs/zustand](https://github.com/pmndrs/zustand)
 - **Native addons:** [Node.js Addons Guide](https://nodejs.org/api/addons.html)
-
----
 
 *Built by Jaineel — learning in public, one phase at a time.*
