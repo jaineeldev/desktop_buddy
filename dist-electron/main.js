@@ -1,7 +1,22 @@
-import { app, BrowserWindow } from "electron";
+import { Tray, nativeImage, Menu, app, BrowserWindow } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+const __dirname$2 = path.dirname(fileURLToPath(import.meta.url));
+function createTray(win2) {
+  const iconPath = path.join(process.env.VITE_PUBLIC ?? path.join(__dirname$2, "../public"), "tray-icon.png");
+  const tray = new Tray(nativeImage.createFromPath(iconPath));
+  const contextMenu = Menu.buildFromTemplate([
+    { label: "Show", click: () => win2.show() },
+    { label: "Hide", click: () => win2.hide() },
+    { type: "separator" },
+    { label: "Quit", click: () => app.quit() }
+  ]);
+  tray.setToolTip("DesktopBuddy");
+  tray.setContextMenu(contextMenu);
+  tray.on("click", () => win2.isVisible() ? win2.hide() : win2.show());
+  return tray;
+}
 createRequire(import.meta.url);
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
@@ -30,6 +45,7 @@ function createWindow() {
   } else {
     win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
+  createTray(win);
 }
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
