@@ -58,7 +58,7 @@ desktopbuddy/
 ### Phase 0 — C Fundamentals
 > Before writing any app code, build a foundation in C.
 
-- [ ] Watch [Bro Code — C Programming Full Course](https://www.youtube.com/watch?v=xND0t1pr3KY) — focus on: variables, functions, loops, arrays, structs, pointers, file I/O, malloc
+- [x] Watch [Bro Code — C Programming Full Course](https://www.youtube.com/watch?v=xND0t1pr3KY) — focus on: variables, functions, loops, arrays, structs, pointers, file I/O, malloc *(in progress)*
 - [ ] Understand variables, types, pointers, structs, `malloc`/`free`, file I/O
 - [ ] Write a C program that reads Windows API memory info and prints RAM usage to the terminal
 - [ ] Write a C struct that holds `cpu_percent`, `ram_used_mb`, `ram_total_mb`
