@@ -233,4 +233,4 @@ DesktopBuddy is built in public, one phase at a time, with a C fundamentals trac
 
 The flat, geometric face style was inspired by [blobatar](https://blobatar.dev) by Alain.
 
-*Built by I with AI assistance — learning in public, one phase at a time.*
+*Built by Jaineel with AI assistance — learning in public, one phase at a time.*
