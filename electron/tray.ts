@@ -12,6 +12,16 @@ export function createTray(win: BrowserWindow) {
     { label: 'Show', click: () => win.show() },
     { label: 'Hide', click: () => win.hide() },
     { type: 'separator' },
+    {
+      label: 'Customise…',
+      click: () => {
+        win.show()
+        win.focus()
+        win.webContents.send('buddy:open-panel')
+      },
+    },
+    { label: 'New face', click: () => win.webContents.send('buddy:new-face') },
+    { type: 'separator' },
     { label: 'Quit', click: () => app.quit() },
   ])
 

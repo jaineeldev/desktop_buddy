@@ -1,0 +1,21 @@
+.stage {
+  position: fixed;
+  inset: 0;
+}
+
+/* The buddy sits in the middle of the window; the settings panel opens beside it. */
+.stage-buddy {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  touch-action: none;
+}
+
+.stage-buddy [data-hit] {
+  cursor: grab;
+}
+
+:root[data-dragging] .stage-buddy [data-hit] {
+  cursor: grabbing;
+}

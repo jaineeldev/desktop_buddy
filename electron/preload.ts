@@ -1,4 +1,4 @@
-import { ipcRenderer, contextBridge } from 'electron'
+import { ipcRenderer, contextBridge, type IpcRendererEvent } from 'electron'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -21,4 +21,24 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
   // You can expose other APTs you need here.
   // ...
+})
+
+// Each subscription hands back its own unsubscribe, so React effects can clean up exactly what they added.
+function subscribe<T>(channel: string, callback: (payload: T) => void) {
+  const listener = (_event: IpcRendererEvent, payload: T) => callback(payload)
+  ipcRenderer.on(channel, listener)
+  return () => {
+    ipcRenderer.off(channel, listener)
+  }
+}
+
+contextBridge.exposeInMainWorld('buddy', {
+  onCursor: (callback: (point: { x: number; y: number }) => void) => subscribe('cursor:move', callback),
+  onNewFace: (callback: () => void) => subscribe('buddy:new-face', callback),
+  onOpenPanel: (callback: () => void) => subscribe('buddy:open-panel', callback),
+  setClickThrough: (through: boolean) => ipcRenderer.send('window:click-through', through),
+  dragStart: () => ipcRenderer.send('window:drag-start'),
+  dragEnd: () => ipcRenderer.send('window:drag-end'),
+  setAlwaysOnTop: (onTop: boolean) => ipcRenderer.send('window:always-on-top', onTop),
+  getScreenSpace: () => ipcRenderer.invoke('window:screen-space'),
 })

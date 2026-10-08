@@ -20,3 +20,20 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   // You can expose other APTs you need here.
   // ...
 });
+function subscribe(channel, callback) {
+  const listener = (_event, payload) => callback(payload);
+  electron.ipcRenderer.on(channel, listener);
+  return () => {
+    electron.ipcRenderer.off(channel, listener);
+  };
+}
+electron.contextBridge.exposeInMainWorld("buddy", {
+  onCursor: (callback) => subscribe("cursor:move", callback),
+  onNewFace: (callback) => subscribe("buddy:new-face", callback),
+  onOpenPanel: (callback) => subscribe("buddy:open-panel", callback),
+  setClickThrough: (through) => electron.ipcRenderer.send("window:click-through", through),
+  dragStart: () => electron.ipcRenderer.send("window:drag-start"),
+  dragEnd: () => electron.ipcRenderer.send("window:drag-end"),
+  setAlwaysOnTop: (onTop) => electron.ipcRenderer.send("window:always-on-top", onTop),
+  getScreenSpace: () => electron.ipcRenderer.invoke("window:screen-space")
+});

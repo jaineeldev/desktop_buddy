@@ -1,0 +1,88 @@
+/*
+ * Idle life runs in CSS: breathing, bobbing, blinking and the tremor.
+ * Timings come from the buddy's name (set inline as custom properties),
+ * so no two buddies move in step. Moods only change --b-rate and --b-shake.
+ */
+.buddy {
+  display: block;
+  overflow: visible;
+}
+
+.b-breathe,
+.b-bob {
+  transform-box: view-box;
+}
+
+.b-breathe {
+  animation: b-breathe calc(2.8s * var(--b-rate, 1)) ease-in-out var(--b-breathe-phase, 0s) infinite alternate;
+}
+
+@keyframes b-breathe {
+  to {
+    transform: scaleX(1.024) scaleY(0.978);
+  }
+}
+
+.b-bob {
+  animation: b-bob calc(3.4s * var(--b-rate, 1)) ease-in-out var(--b-bob-phase, 0s) infinite alternate;
+}
+
+@keyframes b-bob {
+  to {
+    transform: translateY(-1.3px);
+  }
+}
+
+.b-shake {
+  animation: b-shake 0.11s linear infinite;
+}
+
+@keyframes b-shake {
+  0%,
+  100% {
+    translate: calc(0.62px * var(--b-shake, 0)) calc(-0.34px * var(--b-shake, 0));
+  }
+  25% {
+    translate: calc(-0.7px * var(--b-shake, 0)) calc(0.22px * var(--b-shake, 0));
+  }
+  50% {
+    translate: calc(0.38px * var(--b-shake, 0)) calc(0.66px * var(--b-shake, 0));
+  }
+  75% {
+    translate: calc(-0.44px * var(--b-shake, 0)) calc(-0.6px * var(--b-shake, 0));
+  }
+}
+
+.b-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: b-blink var(--b-blink, 4.8s) linear var(--b-blink-phase, 0s) infinite;
+}
+
+.buddy--still-eyes .b-eye {
+  animation: none;
+}
+
+@keyframes b-blink {
+  0%,
+  96.6% {
+    transform: scaleY(1);
+    animation-timing-function: ease-in;
+  }
+  98.3% {
+    transform: scaleY(0.08);
+    animation-timing-function: ease-out;
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .b-breathe,
+  .b-bob,
+  .b-shake,
+  .b-eye {
+    animation: none;
+  }
+}

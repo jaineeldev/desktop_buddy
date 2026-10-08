@@ -3,6 +3,8 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { createTray } from './tray'
+import { startCursorFeed } from './cursor'
+import { registerWindowControls } from './interaction'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -31,14 +33,20 @@ function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     frame: false,
-    width: 300,
-    height: 300,
+    // Room for the buddy in the middle and the settings panel on either side.
+    // Empty space is click-through, so the extra size never gets in the way.
+    width: 860,
+    height: 620,
+    resizable: false,
     transparent: true,
     alwaysOnTop: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
   })
+
+  // Clicks pass through until the renderer sees the cursor over the buddy or the panel.
+  win.setIgnoreMouseEvents(true, { forward: true })
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
@@ -53,6 +61,7 @@ function createWindow() {
   }
 
   createTray(win)
+  startCursorFeed(win)
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -73,4 +82,7 @@ app.on('activate', () => {
   }
 })
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  registerWindowControls()
+  createWindow()
+})
