@@ -75,7 +75,7 @@ These are ideas being explored, not promises. They aren't built yet, and they ma
 
 ## Made with AI help
 
-To be clear about how this app is made: AI has been used to help build DesktopBuddy from the start, and it still is. AI coding assistants, including Claude, help design the buddy, write code and draft docs like this one. Jaineel directs the project and decides what gets built and what ships.
+To be clear about how this app is made: AI has been used to help build DesktopBuddy from the start, and it still is. AI coding assistants, including Claude, help design the buddy, write code and draft docs like this one. I directs the project and decides what gets built and what ships.
 
 ---
 
@@ -143,15 +143,6 @@ desktop_buddy/
 ### 🗺️ Roadmap
 
 DesktopBuddy is built in public, one phase at a time, with a C fundamentals track running alongside the app.
-
-#### Phase 0 — C Fundamentals
-> Before writing any app code, build a foundation in C.
-
-- [x] Watch [Bro Code — C Programming Full Course](https://www.youtube.com/watch?v=xND0t1pr3KY) — focus on: variables, functions, loops, arrays, structs, pointers, file I/O, malloc *(in progress)*
-- [ ] Understand variables, types, pointers, structs, `malloc`/`free`, file I/O
-- [ ] Write a C program that reads Windows API memory info and prints RAM usage to the terminal
-- [ ] Write a C struct that holds `cpu_percent`, `ram_used_mb`, `ram_total_mb`
-- [ ] Be able to explain what a pointer is and why C has no garbage collector
 
 #### Phase 1 — Project Scaffold
 > Get a transparent, frameless Electron window on screen with a placeholder mascot.
@@ -242,4 +233,4 @@ DesktopBuddy is built in public, one phase at a time, with a C fundamentals trac
 
 The flat, geometric face style was inspired by [blobatar](https://blobatar.dev) by Alain.
 
-*Built by Jaineel with AI assistance — learning in public, one phase at a time.*
+*Built by I with AI assistance — learning in public, one phase at a time.*
