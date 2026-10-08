@@ -44,6 +44,10 @@ Then it just lives there. It sits on top of your windows, keeps an eye on your c
 
 ## Make it yours
 
+<p align="center">
+  <img src="docs/customise.gif" alt="One buddy squishing and popping into a new look again and again: new shapes, new eyes and new colours" width="280">
+</p>
+
 Right-click your buddy to open the customise panel:
 
 - Rename it, or roll a random name.
