@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/buddies.svg" alt="A row of nine different DesktopBuddy creatures" width="100%">
+  <img src="docs/buddies.gif" alt="Nine different DesktopBuddy creatures breathing, blinking and turning to look when one of them reacts" width="100%">
 </p>
 
 <h1 align="center">DesktopBuddy</h1>

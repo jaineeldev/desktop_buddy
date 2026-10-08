@@ -58,10 +58,12 @@ function eyeOutline(eye: EyeSpec, p: EyePose, side: -1 | 1, gap: number, look: P
   const cap = Math.max(eye.hw, apart) * (1 - p.lock) + apart * p.lock
   const w = Math.min(Math.max(eye.hw * p.sx, 0.4), cap)
   const h = Math.max(eye.hh * p.sy, 0.35)
+  // Squashed domes get their lower half back, so sleepy lids don't thin out to a hairline.
+  const flat = eye.flat * Math.min(1, Math.max(0, (p.sy - 0.1) / 0.5))
   const rot = eye.lean * (1 - p.lock) - side * p.tilt
   const cx = eye.cx + (-side * p.inward + look.lookX) * eye.hh
   const cy = eye.cy + (-p.lift + look.lookY) * eye.hh
-  return eyePath(cx, cy, w, h, eye.n, eye.flat, p.bend, rot)
+  return eyePath(cx, cy, w, h, eye.n, flat, p.bend, rot)
 }
 
 interface FaceProps extends Omit<BuddyProps, 'name' | 'overrides'> {
