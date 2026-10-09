@@ -76,9 +76,9 @@ Everything saves automatically, and your buddy is waiting just as you left it ne
 
 ## Early access
 
-DesktopBuddy is in early access. It works, but it's new, so expect the odd rough edge.
+DesktopBuddy is in early access, for **Windows 10 and 11 only** at the moment. It works, but it's new, so expect the odd rough edge.
 
-1. Download `DesktopBuddy-Windows-0.1.0-Setup.exe` from the [latest release](https://github.com/jaineeldev/desktop_buddy/releases/latest).
+1. Download `DesktopBuddy-Windows-0.1.0-Setup.exe` from the newest release on the [releases page](https://github.com/jaineeldev/desktop_buddy/releases).
 2. Run it. The installer isn't code-signed yet, so Windows SmartScreen may show "Windows protected your PC". Click **More info**, then **Run anyway**.
 3. Your new buddy wakes up and introduces itself.
 
