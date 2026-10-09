@@ -1,4 +1,4 @@
-import { Tray, nativeImage, Menu, app, screen, ipcMain, BrowserWindow } from "electron";
+import { Tray, nativeImage, Menu, app, ipcMain, screen, BrowserWindow } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -19,12 +19,29 @@ function createTray(win2) {
       }
     },
     { label: "New face", click: () => win2.webContents.send("buddy:new-face") },
+    {
+      label: "Show intro again",
+      click: () => {
+        win2.show();
+        win2.focus();
+        win2.webContents.send("buddy:replay-intro");
+      }
+    },
     { type: "separator" },
     { label: "Quit", click: () => app.quit() }
   ]);
   tray.setToolTip("DesktopBuddy");
   tray.setContextMenu(contextMenu);
   tray.on("click", () => win2.isVisible() ? win2.hide() : win2.show());
+  ipcMain.removeAllListeners("tray:set-icon");
+  ipcMain.on("tray:set-icon", (_event, icon) => {
+    if (tray.isDestroyed()) return;
+    const image = nativeImage.createEmpty();
+    image.addRepresentation({ scaleFactor: 1, dataURL: icon.x1 });
+    image.addRepresentation({ scaleFactor: 2, dataURL: icon.x2 });
+    tray.setImage(image);
+    tray.setToolTip(icon.tooltip);
+  });
   return tray;
 }
 const POLL_MS = 1e3 / 30;
@@ -45,6 +62,34 @@ function startCursorFeed(win2) {
 const DRAG_MS = 1e3 / 60;
 let drag = null;
 const windowOf = (event) => BrowserWindow.fromWebContents(event.sender);
+const SHAKE_SPEED = 8;
+const SHAKE_REVERSALS = 4;
+const SHAKE_WINDOW_MS = 1e3;
+function shakeDetector(onShake) {
+  let last = null;
+  const dir = { x: 0, y: 0 };
+  let reversals = [];
+  let fired = false;
+  return (cursor) => {
+    if (fired) return;
+    const now = Date.now();
+    if (last) {
+      for (const axis of ["x", "y"]) {
+        const delta = cursor[axis] - last[axis];
+        if (Math.abs(delta) < SHAKE_SPEED) continue;
+        const sign = Math.sign(delta);
+        if (dir[axis] !== 0 && sign !== dir[axis]) reversals.push(now);
+        dir[axis] = sign;
+      }
+    }
+    last = cursor;
+    reversals = reversals.filter((t) => now - t < SHAKE_WINDOW_MS);
+    if (reversals.length >= SHAKE_REVERSALS) {
+      fired = true;
+      onShake();
+    }
+  };
+}
 function stopDrag() {
   if (!drag) return;
   clearInterval(drag.timer);
@@ -62,9 +107,11 @@ function registerWindowControls() {
     const start = screen.getCursorScreenPoint();
     const bounds = win2.getBounds();
     const grab = { x: start.x - bounds.x, y: start.y - bounds.y };
+    const shake = shakeDetector(() => win2.webContents.send("buddy:shaken"));
     const timer = setInterval(() => {
       if (win2.isDestroyed()) return stopDrag();
       const cursor = screen.getCursorScreenPoint();
+      shake(cursor);
       win2.setBounds({ x: cursor.x - grab.x, y: cursor.y - grab.y, width: bounds.width, height: bounds.height });
     }, DRAG_MS);
     drag = { win: win2, timer };
@@ -100,7 +147,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let win;
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: path.join(process.env.VITE_PUBLIC, "icon.ico"),
     frame: false,
     // Room for the buddy in the middle and the settings panel on either side.
     // Empty space is click-through, so the extra size never gets in the way.

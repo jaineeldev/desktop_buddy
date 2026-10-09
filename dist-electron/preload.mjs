@@ -31,9 +31,12 @@ electron.contextBridge.exposeInMainWorld("buddy", {
   onCursor: (callback) => subscribe("cursor:move", callback),
   onNewFace: (callback) => subscribe("buddy:new-face", callback),
   onOpenPanel: (callback) => subscribe("buddy:open-panel", callback),
+  onShaken: (callback) => subscribe("buddy:shaken", callback),
+  onReplayIntro: (callback) => subscribe("buddy:replay-intro", callback),
   setClickThrough: (through) => electron.ipcRenderer.send("window:click-through", through),
   dragStart: () => electron.ipcRenderer.send("window:drag-start"),
   dragEnd: () => electron.ipcRenderer.send("window:drag-end"),
   setAlwaysOnTop: (onTop) => electron.ipcRenderer.send("window:always-on-top", onTop),
-  getScreenSpace: () => electron.ipcRenderer.invoke("window:screen-space")
+  getScreenSpace: () => electron.ipcRenderer.invoke("window:screen-space"),
+  setTrayIcon: (icon) => electron.ipcRenderer.send("tray:set-icon", icon)
 });

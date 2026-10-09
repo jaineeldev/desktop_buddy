@@ -25,7 +25,7 @@ Give it a name and it grows a face. The name decides everything: its shape, its 
 Then it just lives there. It sits on top of your windows, keeps an eye on your cursor wherever it goes, and has opinions about its day. Maybe one day it'll even answer back when you type to it.
 
 <p align="center">
-  <img src="docs/moods.svg" alt="The default buddy in six moods: idle, happy, sleepy, stressed, angry and bored" width="640">
+  <img src="docs/moods.svg" alt="The default buddy in fifteen moods: idle, happy, sleepy, stressed, angry, bored, surprised, sad, curious, confused, love, wink, focused, smug and dizzy" width="720">
 </p>
 
 ## What it can do
@@ -36,11 +36,21 @@ Then it just lives there. It sits on top of your windows, keeps an eye on your c
 
 **Always watching.** Its eyes follow your cursor anywhere on the screen, not just when you're close. Leave the mouse alone and it starts looking around by itself.
 
-**Moods you can read.** Happy, sleepy, stressed, angry and bored, each with its own face and body language. An angry buddy flushes red and trembles.
+**Moods you can read.** Fifteen of them, from happy, sad and sleepy to curious, confused, smug and dizzy, each with its own face and body language. An angry buddy flushes red and trembles, a sad one loses its colour, and one in love gets heart eyes as little hearts float up around it.
 
-**Pet it. Carry it.** Click to make it happy. Grab it and drop it wherever you like.
+**It reacts to you.**
+
+- Pet it and it's happy, and now and then it winks back. Double-click and it jumps, startled. Keep petting and it falls in love.
+- Grab it and it looks surprised. Drop it and it squashes as it lands. Shake it around while you carry it and it gets dizzy.
+- Hover over it and it tilts its head, curious.
+- Leave your computer alone and it gets bored, then dozes off. It wakes up with a start when you come back.
+- Give it a new look and it pops up, surprised. Start the app and it wakes up with a stretch.
 
 **Never in the way.** Only the buddy itself catches your mouse. The space around it lets clicks straight through to whatever is underneath.
+
+**A warm welcome.** The first time you open DesktopBuddy, your new buddy introduces itself in speech bubbles. You name it (its face changes as you type), then try petting it, carrying it and giving it a new look. You can skip it, or replay it any time from the tray.
+
+**Lives in your tray.** The tray icon is your own buddy, and it changes whenever your buddy does.
 
 ## Make it yours
 
@@ -62,7 +72,6 @@ Everything saves automatically, and your buddy is waiting just as you left it ne
 
 ## Coming soon
 
-- **A warm welcome.** A short introduction the first time you open DesktopBuddy: meet your new buddy, give it a name, and learn how to pet it, carry it and make it yours.
 - **It notices your PC.** It reads your CPU and memory and reacts: stressed when your machine is working hard, sleepy when it's quiet.
 - **Stats at a glance.** A small panel beside your buddy with CPU, RAM and the time.
 - **Personality.** Speech bubbles, time-of-day greetings and comments on what your computer is up to.
@@ -162,11 +171,13 @@ DesktopBuddy is built in public, one phase at a time, with a C fundamentals trac
 
 - [x] Design the mascot: SVG faces generated from the buddy's name
 - [x] Buddy states: `idle`, `happy`, `sleepy`, `stressed`, `angry`, `bored`
+- [x] More emotions: `surprised`, `sad`, `curious`, `confused`, `love` (heart eyes and floating hearts), `wink`, `focused`, `smug`, `dizzy`
 - [x] Use Framer Motion to morph between moods
 - [x] Implement an idle loop — buddy breathes, bobs and blinks on a timer
 - [x] Click interaction triggers `happy` state
+- [x] Reactions: petting, double-click, rapid petting, grab/drop/shake, hover, idle boredom and sleep, new looks, waking up on start
 - [ ] Click interaction also shows a speech bubble
-- [ ] Build `SpeechBubble` component (appears, holds, fades out)
+- [x] Build `SpeechBubble` component (appears, holds, fades out)
 
 #### Phase 3 — C Stats Module
 > Write real C that reads system stats via the Windows API and exposes it to Electron.
@@ -200,7 +211,8 @@ DesktopBuddy is built in public, one phase at a time, with a C fundamentals trac
 #### Phase 6 — Polish & Release
 > Wrap it up into something shareable.
 
-- [ ] First-run onboarding: introduce the buddy, let the user name it, and show how to pet, drag and customise it
+- [x] First-run onboarding: introduce the buddy, let the user name it, and show how to pet, drag and customise it
+- [x] App icon (the pebble buddy) and a tray icon that shows your own buddy
 - [ ] Package with `electron-builder` for Windows
 - [ ] Auto-start on login
 - [x] Multiple buddy looks: every name is a different buddy, plus six hand-drawn extras

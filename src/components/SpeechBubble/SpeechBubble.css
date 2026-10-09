@@ -1,0 +1,143 @@
+.bubble {
+  --b-bg: #111113;
+  --b-line: #26262b;
+  --b-text: #ececef;
+  --b-muted: #8d8d95;
+  --b-faint: #5f5f67;
+  --b-focus: #9db8ff;
+
+  position: relative;
+  width: max-content;
+  max-width: 250px;
+  padding: 12px 14px;
+  background: var(--b-bg);
+  border: 1px solid var(--b-line);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.4);
+  color: var(--b-text);
+  font-size: 13px;
+  line-height: 1.45;
+  cursor: default;
+  user-select: none;
+}
+
+/* The tail: a small rotated square sharing the bubble's fill and border. */
+.bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: var(--b-bg);
+  border: 1px solid var(--b-line);
+  translate: -50% 0;
+  rotate: 45deg;
+}
+
+.bubble--tail-down::after {
+  bottom: -6px;
+  border-top: 0;
+  border-left: 0;
+}
+
+.bubble--tail-up::after {
+  top: -6px;
+  border-bottom: 0;
+  border-right: 0;
+}
+
+.bubble-text {
+  display: grid;
+  margin: 0;
+}
+
+/* The invisible full text and the typed text share one grid cell, so the bubble is sized by the full sentence. */
+.bubble-sizer,
+.bubble-typed {
+  grid-area: 1 / 1;
+}
+
+.bubble-sizer {
+  visibility: hidden;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.bubble-extra {
+  margin-top: 10px;
+}
+
+.bubble :focus-visible {
+  outline: 2px solid var(--b-focus);
+  outline-offset: 2px;
+}
+
+.bubble-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bubble-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--b-text);
+  border-radius: 999px;
+  background: var(--b-text);
+  color: var(--b-bg);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.bubble-btn--ghost {
+  border-color: var(--b-line);
+  background: transparent;
+  color: var(--b-muted);
+}
+
+.bubble-btn--ghost:hover {
+  border-color: var(--b-muted);
+  color: var(--b-text);
+}
+
+.bubble-skip {
+  margin-left: auto;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--b-faint);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.bubble-skip:hover {
+  color: var(--b-muted);
+}
+
+.bubble-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  padding: 4px 0 6px;
+  border: 0;
+  border-bottom: 1px solid var(--b-line);
+  background: none;
+  color: var(--b-text);
+  font-size: 16px;
+  outline: none;
+  user-select: text;
+}
+
+.bubble-input:focus {
+  border-bottom-color: var(--b-muted);
+}
+
+.bubble-input::placeholder {
+  color: var(--b-faint);
+}

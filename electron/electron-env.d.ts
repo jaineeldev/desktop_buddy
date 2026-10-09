@@ -30,6 +30,9 @@ interface Window {
     onCursor(callback: (point: { x: number; y: number }) => void): () => void
     onNewFace(callback: () => void): () => void
     onOpenPanel(callback: () => void): () => void
+    /** Fires once per drag when the buddy is shaken back and forth. */
+    onShaken(callback: () => void): () => void
+    onReplayIntro(callback: () => void): () => void
     /** While true, clicks fall through the window to whatever is behind it. */
     setClickThrough(through: boolean): void
     /** The main process moves the window with the cursor between these two calls. */
@@ -37,5 +40,7 @@ interface Window {
     dragEnd(): void
     setAlwaysOnTop(onTop: boolean): void
     getScreenSpace(): Promise<import('../src/stores/buddyStore').ScreenSpace>
+    /** Your buddy drawn at 16px and 32px as PNG data URLs, plus the tray tooltip. */
+    setTrayIcon(icon: { x1: string; x2: string; tooltip: string }): void
   }
 }

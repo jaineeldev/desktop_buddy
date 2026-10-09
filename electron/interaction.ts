@@ -6,6 +6,39 @@ let drag: { win: BrowserWindow; timer: ReturnType<typeof setInterval> } | null =
 
 const windowOf = (event: IpcMainEvent | IpcMainInvokeEvent) => BrowserWindow.fromWebContents(event.sender)
 
+/** A swing has to cover this many px per tick to count, so slow repositioning never trips it. */
+const SHAKE_SPEED = 8
+/** This many direction changes inside the window means the buddy is being shaken. */
+const SHAKE_REVERSALS = 4
+const SHAKE_WINDOW_MS = 1000
+
+/** Watches cursor positions during a drag and calls `onShake` once if they swing back and forth hard. */
+function shakeDetector(onShake: () => void) {
+  let last: { x: number; y: number } | null = null
+  const dir = { x: 0, y: 0 }
+  let reversals: number[] = []
+  let fired = false
+  return (cursor: { x: number; y: number }) => {
+    if (fired) return
+    const now = Date.now()
+    if (last) {
+      for (const axis of ['x', 'y'] as const) {
+        const delta = cursor[axis] - last[axis]
+        if (Math.abs(delta) < SHAKE_SPEED) continue
+        const sign = Math.sign(delta)
+        if (dir[axis] !== 0 && sign !== dir[axis]) reversals.push(now)
+        dir[axis] = sign
+      }
+    }
+    last = cursor
+    reversals = reversals.filter((t) => now - t < SHAKE_WINDOW_MS)
+    if (reversals.length >= SHAKE_REVERSALS) {
+      fired = true
+      onShake()
+    }
+  }
+}
+
 function stopDrag() {
   if (!drag) return
   clearInterval(drag.timer)
@@ -30,9 +63,11 @@ export function registerWindowControls() {
     const start = screen.getCursorScreenPoint()
     const bounds = win.getBounds()
     const grab = { x: start.x - bounds.x, y: start.y - bounds.y }
+    const shake = shakeDetector(() => win.webContents.send('buddy:shaken'))
     const timer = setInterval(() => {
       if (win.isDestroyed()) return stopDrag()
       const cursor = screen.getCursorScreenPoint()
+      shake(cursor)
       // setBounds with a fixed size: setPosition alone can grow the window on scaled Windows displays.
       win.setBounds({ x: cursor.x - grab.x, y: cursor.y - grab.y, width: bounds.width, height: bounds.height })
     }, DRAG_MS)

@@ -4,7 +4,16 @@ export type BuddyState =
   | 'sleepy'
   | 'stressed'
   | 'angry'
-  | 'bored';
+  | 'bored'
+  | 'surprised'
+  | 'sad'
+  | 'curious'
+  | 'confused'
+  | 'love'
+  | 'wink'
+  | 'focused'
+  | 'smug'
+  | 'dizzy';
 
 export const BUDDY_STATES: BuddyState[] = [
   'idle',
@@ -13,4 +22,13 @@ export const BUDDY_STATES: BuddyState[] = [
   'stressed',
   'angry',
   'bored',
+  'surprised',
+  'sad',
+  'curious',
+  'confused',
+  'love',
+  'wink',
+  'focused',
+  'smug',
+  'dizzy',
 ];

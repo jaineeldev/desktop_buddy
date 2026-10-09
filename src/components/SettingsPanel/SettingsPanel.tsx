@@ -102,12 +102,17 @@ export function SettingsPanel() {
       screenSpace: s.screenSpace,
     })),
   )
-  const { update, setName, setState, closePanel } = useBuddyStore.getState()
+  const { update, setName, setState, closePanel, celebrate } = useBuddyStore.getState()
 
   // Read the latest look from the store, not this render's copy, so quick successive edits never undo each other.
   const setLook = (patch: LookOverrides) => update({ look: compact({ ...useBuddyStore.getState().look, ...patch }) })
   const setTrait = (key: PinnableTrait, value: number | undefined) =>
     setLook({ traits: compact({ ...useBuddyStore.getState().look.traits, [key]: value }) })
+  // Picking something new (not dragging a slider) gets a surprised little pop.
+  const pick = (patch: LookOverrides) => {
+    setLook(patch)
+    celebrate()
+  }
 
   // The side is picked once on open, so resizing the buddy slides the panel along instead of flipping it.
   const [side] = useState(() => placePanel(size, screenSpace).side)
@@ -134,11 +139,15 @@ export function SettingsPanel() {
     window.addEventListener('keydown', onKey)
     // In the desktop app, clicking anywhere else closes the panel, like a popover.
     // A browser tab blurs for unrelated reasons (devtools), so only listen in Electron.
+    // During the intro it stays open, so a stray click on the desktop can't cut the customise step short.
+    const onBlur = () => {
+      if (useBuddyStore.getState().onboarded) closePanel()
+    }
     const listenBlur = Boolean(window.buddy)
-    if (listenBlur) window.addEventListener('blur', closePanel)
+    if (listenBlur) window.addEventListener('blur', onBlur)
     return () => {
       window.removeEventListener('keydown', onKey)
-      if (listenBlur) window.removeEventListener('blur', closePanel)
+      if (listenBlur) window.removeEventListener('blur', onBlur)
     }
   }, [closePanel])
 
@@ -166,7 +175,15 @@ export function SettingsPanel() {
           <span className="panel-caption">name</span>
           <input value={name} onChange={(e) => setName(e.target.value)} spellCheck={false} maxLength={40} />
         </label>
-        <button className="icon-btn" aria-label="Random name" title="Random name" onClick={() => setName(randomBuddyName())}>
+        <button
+          className="icon-btn"
+          aria-label="Random name"
+          title="Random name"
+          onClick={() => {
+            setName(randomBuddyName())
+            celebrate()
+          }}
+        >
           <ShuffleIcon />
         </button>
         <button className="icon-btn" aria-label="Close" title="Close" onClick={closePanel}>
@@ -176,16 +193,22 @@ export function SettingsPanel() {
 
       <div className="panel-pins">
         <span>{pins === 0 ? 'nothing pinned, all from the name' : `${pins} pinned`}</span>
-        <button disabled={pins === 0} onClick={() => update({ look: {} })}>
+        <button
+          disabled={pins === 0}
+          onClick={() => {
+            update({ look: {} })
+            celebrate()
+          }}
+        >
           unpin all
         </button>
       </div>
 
       <div className="panel-body">
         <Section title="shape" onReset={look.shape ? () => setLook({ shape: undefined }) : undefined}>
-          <TileGrid tiles={tiles.shapes} selected={look.shape} onPick={(shape) => setLook({ shape })} />
+          <TileGrid tiles={tiles.shapes} selected={look.shape} onPick={(shape) => pick({ shape })} />
           <h4 className="panel-subhead">extras</h4>
-          <TileGrid tiles={tiles.extras} selected={look.shape} onPick={(shape) => setLook({ shape })} />
+          <TileGrid tiles={tiles.extras} selected={look.shape} onPick={(shape) => pick({ shape })} />
         </Section>
 
         <Section
@@ -199,7 +222,7 @@ export function SettingsPanel() {
               aria-label="Colour from the name"
               title="From the name"
               style={{ '--auto': toHex(toneColour(current.tone, hashed('hue') * 360)) } as CSSProperties}
-              onClick={() => setLook({ hue: undefined })}
+              onClick={() => pick({ hue: undefined })}
             />
             {HUES.map((hue) => (
               <button
@@ -208,16 +231,16 @@ export function SettingsPanel() {
                 aria-pressed={look.hue === hue}
                 aria-label={`Hue ${hue}°`}
                 style={{ background: toHex(toneColour(current.tone, hue)) }}
-                onClick={() => setLook({ hue })}
+                onClick={() => pick({ hue })}
               />
             ))}
           </div>
           <div className="chips">
-            <Chip selected={!look.tone} onClick={() => setLook({ tone: undefined })}>
+            <Chip selected={!look.tone} onClick={() => pick({ tone: undefined })}>
               auto
             </Chip>
             {TONE_NAMES.map((tone) => (
-              <Chip key={tone} selected={look.tone === tone} onClick={() => setLook({ tone })}>
+              <Chip key={tone} selected={look.tone === tone} onClick={() => pick({ tone })}>
                 {tone}
               </Chip>
             ))}
@@ -228,7 +251,7 @@ export function SettingsPanel() {
           title="eyes"
           onReset={look.eyes || look.traits ? () => setLook({ eyes: undefined, traits: undefined }) : undefined}
         >
-          <TileGrid tiles={tiles.eyes} selected={look.eyes} onPick={(eyes) => setLook({ eyes })} columns={3} />
+          <TileGrid tiles={tiles.eyes} selected={look.eyes} onPick={(eyes) => pick({ eyes })} columns={3} />
           <h4 className="panel-subhead">fine-tune</h4>
           {EYE_SLIDERS.filter((s) => !s.hiddenFor?.includes(current.eyeStyle)).map(({ key, label, invert }) => {
             const pinned = look.traits?.[key]

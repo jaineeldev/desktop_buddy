@@ -36,9 +36,12 @@ contextBridge.exposeInMainWorld('buddy', {
   onCursor: (callback: (point: { x: number; y: number }) => void) => subscribe('cursor:move', callback),
   onNewFace: (callback: () => void) => subscribe('buddy:new-face', callback),
   onOpenPanel: (callback: () => void) => subscribe('buddy:open-panel', callback),
+  onShaken: (callback: () => void) => subscribe('buddy:shaken', callback),
+  onReplayIntro: (callback: () => void) => subscribe('buddy:replay-intro', callback),
   setClickThrough: (through: boolean) => ipcRenderer.send('window:click-through', through),
   dragStart: () => ipcRenderer.send('window:drag-start'),
   dragEnd: () => ipcRenderer.send('window:drag-end'),
   setAlwaysOnTop: (onTop: boolean) => ipcRenderer.send('window:always-on-top', onTop),
   getScreenSpace: () => ipcRenderer.invoke('window:screen-space'),
+  setTrayIcon: (icon: { x1: string; x2: string; tooltip: string }) => ipcRenderer.send('tray:set-icon', icon),
 })

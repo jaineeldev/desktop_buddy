@@ -31,7 +31,7 @@ let win: BrowserWindow | null
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    icon: path.join(process.env.VITE_PUBLIC, 'icon.ico'),
     frame: false,
     // Room for the buddy in the middle and the settings panel on either side.
     // Empty space is click-through, so the extra size never gets in the way.

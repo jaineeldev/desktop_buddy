@@ -89,10 +89,23 @@ export function dropletPath(cx: number, cy: number, r: number, tip: number): str
 const EYE_SAMPLES = 28
 
 /**
+ * The classic heart curve at the same angle an eye outline is sampled at,
+ * normalised to fit a 2×2 box. Starting a quarter-turn on keeps the right
+ * lobe at angle 0 and the tip at the bottom, so eye-to-heart morphs don't twist.
+ */
+function heartPoint(t: number): Pt {
+  const s = t + Math.PI / 2
+  const x = Math.sin(s) ** 3
+  const y = -(13 * Math.cos(s) - 5 * Math.cos(2 * s) - 2 * Math.cos(3 * s) - Math.cos(4 * s)) / 16
+  return [x, (y - 0.164) / 0.899]
+}
+
+/**
  * An eye outline that can morph smoothly: always the same number of points,
  * so any two eyes interpolate cleanly. `flat` (0–1) squashes the lower half
- * onto the centre line, making a dome. `bend` lifts the middle and leaves the
- * ends, turning a flat bar into a closed, happy arc.
+ * onto the centre line, making a dome. `heart` (0–1) pulls the outline into a
+ * heart. `bend` lifts the middle and leaves the ends, turning a flat bar into
+ * a closed, happy arc.
  */
 export function eyePath(
   cx: number,
@@ -103,15 +116,21 @@ export function eyePath(
   flat: number,
   bend: number,
   rotDeg: number,
+  heart = 0,
 ): string {
   const pts: Pt[] = []
   for (let i = 0; i < EYE_SAMPLES; i++) {
     const t = (i / EYE_SAMPLES) * Math.PI * 2
     const c = Math.cos(t)
     const s = Math.sin(t)
-    const x = a * Math.sign(c) * Math.abs(c) ** (2 / n)
+    let x = a * Math.sign(c) * Math.abs(c) ** (2 / n)
     let y = b * Math.sign(s) * Math.abs(s) ** (2 / n)
     if (y > 0) y *= 1 - flat
+    if (heart > 0) {
+      const [hx, hy] = heartPoint(t)
+      x += (hx * a - x) * heart
+      y += (hy * b - y) * heart
+    }
     y -= bend * a * 0.75 * (1 - (x / a) ** 2)
     pts.push(place([x, y], cx, cy, rotDeg))
   }

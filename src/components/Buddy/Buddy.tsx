@@ -1,4 +1,4 @@
-import { animate, motion, useMotionValue, useTransform, type MotionValue } from 'framer-motion'
+import { AnimatePresence, animate, motion, useMotionValue, useTransform, type MotionValue } from 'framer-motion'
 import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
 import { useGaze } from '../../hooks/useGaze'
 import type { BuddyState } from './BuddyStates'
@@ -22,6 +22,8 @@ interface BuddyProps {
   size?: number
   /** Let the eyes follow the cursor. */
   gaze?: boolean
+  /** Bump this number to play a squash-and-stretch, e.g. when petted or dropped. */
+  bounce?: number
 }
 
 export function Buddy({ name, overrides, ...rest }: BuddyProps) {
@@ -49,6 +51,19 @@ function usePose(target: Pose): MotionValue<Pose> {
   return pose
 }
 
+/** A quick squash-and-stretch each time `bounce` changes, skipping the first render. */
+function useJiggle(bounce: number): MotionValue<number> {
+  const jiggle = useMotionValue(0)
+  const seen = useRef(bounce)
+  useEffect(() => {
+    if (seen.current === bounce) return
+    seen.current = bounce
+    const controls = animate(jiggle, [0, 1, -0.45, 0.15, 0], { duration: 0.5, ease: 'easeOut' })
+    return () => controls.stop()
+  }, [bounce, jiggle])
+  return jiggle
+}
+
 /**
  * Wide poses are capped so the two eyes never run into each other. A visor's
  * halves overlap at rest; as a pose takes hold they pull apart into two eyes.
@@ -56,14 +71,47 @@ function usePose(target: Pose): MotionValue<Pose> {
 function eyeOutline(eye: EyeSpec, p: EyePose, side: -1 | 1, gap: number, look: Pose): string {
   const apart = gap * 0.4
   const cap = Math.max(eye.hw, apart) * (1 - p.lock) + apart * p.lock
-  const w = Math.min(Math.max(eye.hw * p.sx, 0.4), cap)
-  const h = Math.max(eye.hh * p.sy, 0.35)
+  let w = Math.max(eye.hw * p.sx, 0.4)
+  let h = Math.max(eye.hh * p.sy, 0.35)
+  // Hearts read best near-square, whatever the eye style's proportions.
+  if (p.heart > 0) {
+    const square = ((w + h) / 2) * 1.1
+    w += (square - w) * p.heart
+    h += (square - h) * p.heart
+  }
+  w = Math.min(w, cap)
   // Squashed domes get their lower half back, so sleepy lids don't thin out to a hairline.
   const flat = eye.flat * Math.min(1, Math.max(0, (p.sy - 0.1) / 0.5))
   const rot = eye.lean * (1 - p.lock) - side * p.tilt
   const cx = eye.cx + (-side * p.inward + look.lookX) * eye.hh
   const cy = eye.cy + (-p.lift + look.lookY) * eye.hh
-  return eyePath(cx, cy, w, h, eye.n, flat, p.bend, rot)
+  return eyePath(cx, cy, w, h, eye.n, flat, p.bend, rot, p.heart)
+}
+
+const HEART = eyePath(0, 0, 4.2, 4.2, 2, 0, 0, 0, 1)
+const HEART_COLOUR = toHex(oklch(0.68, 0.2, 10))
+/** Where each floating heart starts relative to the eyes, how far it drifts sideways, and when. */
+const FLOATERS = [
+  { x: -24, y: -6, drift: -6, delay: 0 },
+  { x: 22, y: -10, drift: 7, delay: 0.45 },
+  { x: -6, y: -16, drift: -3, delay: 0.9 },
+  { x: 12, y: -4, drift: 4, delay: 1.35 },
+]
+
+/** Little hearts that rise and fade around the buddy while it's in love. */
+function Hearts({ look }: { look: BuddyLook }) {
+  const [left, right] = look.eyes
+  const cx = (left.cx + right.cx) / 2
+  const cy = Math.min(left.cy, right.cy) - left.hh
+  return (
+    <motion.g fill={HEART_COLOUR} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+      {FLOATERS.map((h, i) => (
+        <g key={i} transform={`translate(${cx + h.x} ${cy + h.y})`}>
+          <path className="b-heart" d={HEART} style={{ '--drift': h.drift, animationDelay: `${h.delay}s` } as CSSProperties} />
+        </g>
+      ))}
+    </motion.g>
+  )
 }
 
 interface FaceProps extends Omit<BuddyProps, 'name' | 'overrides'> {
@@ -71,10 +119,11 @@ interface FaceProps extends Omit<BuddyProps, 'name' | 'overrides'> {
   look: BuddyLook
 }
 
-function Face({ name, look, mood, size = 200, gaze = true }: FaceProps) {
+function Face({ name, look, mood, size = 200, gaze = true, bounce = 0 }: FaceProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const expression = EXPRESSIONS[mood]
   const pose = usePose(expression.pose)
+  const jiggle = useJiggle(bounce)
   const [left, right] = look.eyes
   const reducedMotion = useMemo(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])
   const eyesAt = useGaze(svgRef, {
@@ -97,12 +146,14 @@ function Face({ name, look, mood, size = 200, gaze = true }: FaceProps) {
   const eyesY = useTransform(() => eyesAt.y.get() * pose.get().gaze)
   const bodyX = useTransform(() => eyesAt.x.get() * pose.get().gaze * 0.2)
   const bodyY = useTransform(() => pose.get().bodyY + eyesAt.y.get() * pose.get().gaze * 0.15)
-  const scaleX = useTransform(() => 1 + pose.get().squash)
-  const scaleY = useTransform(() => 1 - pose.get().squash)
+  const rotate = useTransform(() => pose.get().bodyTilt)
+  const scaleX = useTransform(() => (1 + pose.get().squash) * (1 + 0.12 * jiggle.get()))
+  const scaleY = useTransform(() => (1 - pose.get().squash) * (1 - 0.14 * jiggle.get()))
   const shake = useTransform(() => pose.get().shake)
+  const wobble = useTransform(() => pose.get().wobble)
   const fill = useTransform(() => {
-    const { tint, tintHue } = pose.get()
-    return toHex(tint < 0.002 ? look.body : mixLab(look.body, oklch(look.body[0], 0.2, tintHue), tint))
+    const { tint, tintHue, tintChroma } = pose.get()
+    return toHex(tint < 0.002 ? look.body : mixLab(look.body, oklch(look.body[0], tintChroma, tintHue), tint))
   })
 
   const ground = `50px ${look.ground}px`
@@ -134,25 +185,39 @@ function Face({ name, look, mood, size = 200, gaze = true }: FaceProps) {
             {/* data-hit marks the painted buddy, so clicks on empty space can pass through to the desktop. */}
             <motion.g
               data-hit
-              style={{ x: bodyX, y: bodyY, scaleX, scaleY, transformBox: 'view-box', originX: '50px', originY: `${look.ground}px` }}
+              style={{
+                x: bodyX,
+                y: bodyY,
+                rotate,
+                scaleX,
+                scaleY,
+                transformBox: 'view-box',
+                originX: '50px',
+                originY: `${look.ground}px`,
+              }}
             >
               <motion.g style={{ fill }}>
                 {look.parts.map((d, i) => (
                   <path key={i} d={d} />
                 ))}
               </motion.g>
-              <motion.g fill={toHex(look.eye)} style={{ x: eyesX, y: eyesY }}>
-                <g className="b-eye">
-                  <motion.path d={leftD} />
+              <motion.g fill={toHex(look.eye)} style={{ x: eyesX, y: eyesY, '--b-wobble': wobble } as never}>
+                <g className="b-orbit">
+                  <g className="b-eye">
+                    <motion.path d={leftD} />
+                  </g>
                 </g>
-                <g className="b-eye">
-                  <motion.path d={rightD} />
+                <g className="b-orbit b-orbit--reverse">
+                  <g className="b-eye">
+                    <motion.path d={rightD} />
+                  </g>
                 </g>
               </motion.g>
             </motion.g>
           </g>
         </g>
       </motion.g>
+      <AnimatePresence>{expression.effect === 'hearts' && <Hearts key="hearts" look={look} />}</AnimatePresence>
     </motion.svg>
   )
 }
