@@ -114,9 +114,10 @@ export const EXPRESSIONS: Record<BuddyState, Expression> = {
     blink: true,
   },
 
-  // Wide flat bars in a \ /, warm-tinted and trembling.
+  // Wide flat bars in a \ /, flushed red and trembling. The flush is strong because cool
+  // colours sit opposite red, and a lighter mix only reaches grey-beige on them.
   angry: {
-    pose: pose({ sx: 2, sy: 0.4, tilt: 20, inward: 0.15, lock: 1 }, { shake: 0.55, tint: 0.65, squash: 0.03, gaze: 0.6 }),
+    pose: pose({ sx: 2, sy: 0.4, tilt: 20, inward: 0.15, lock: 1 }, { shake: 0.55, tint: 0.82, squash: 0.03, gaze: 0.6 }),
     rate: 0.7,
     blink: false,
   },

@@ -3,6 +3,7 @@ import { Buddy } from '../components/Buddy/Buddy'
 import { BUDDY_STATES, type BuddyState } from '../components/Buddy/BuddyStates'
 import { generateLook } from '../components/Buddy/blob/generate'
 import { randomBuddyName } from '../components/Buddy/names'
+import { DEFAULT_NAME } from '../stores/buddyStore'
 
 /** Same wall every visit, so faces can be compared between changes. */
 function seededNames(count: number): string[] {
@@ -36,7 +37,7 @@ const chip = (active: boolean): CSSProperties => ({
 
 /** A dev page for browsing faces and moods. Open the renderer with ?gallery. */
 export default function Gallery() {
-  const [name, setName] = useState('buddy')
+  const [name, setName] = useState(DEFAULT_NAME)
   const [mood, setMood] = useState<BuddyState>('idle')
   const wall = useMemo(() => seededNames(72), [])
   const shape = useMemo(() => generateLook(name).shape, [name])

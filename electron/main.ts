@@ -1,12 +1,10 @@
 import { app, BrowserWindow } from 'electron'
-import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { createTray } from './tray'
 import { startCursorFeed } from './cursor'
 import { registerWindowControls } from './interaction'
 
-const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -28,6 +26,22 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
 let win: BrowserWindow | null
+
+/** Matches `appId` in electron-builder.json5, so Windows treats the installed app and its taskbar button as one. */
+const APP_ID = 'com.jaineel.desktopbuddy'
+if (process.platform === 'win32') app.setAppUserModelId(APP_ID)
+
+// One buddy at a time: launching again (say, from the Start menu while it already started with Windows)
+// just brings back the one that's running.
+const isFirstInstance = app.requestSingleInstanceLock()
+if (!isFirstInstance) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    win?.show()
+    win?.focus()
+  })
+}
 
 function createWindow() {
   win = new BrowserWindow({
@@ -83,6 +97,7 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(() => {
+  if (!isFirstInstance) return
   registerWindowControls()
   createWindow()
 })

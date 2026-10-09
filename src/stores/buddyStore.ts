@@ -60,6 +60,11 @@ interface BuddyStore extends BuddySettings {
 export const SIZE_RANGE = { min: 120, max: 280 } as const
 export const OPACITY_RANGE = { min: 0.3, max: 1 } as const
 
+/** A new buddy's name, and so its face: a bright cyan squircle with dot eyes, matching the app icon. */
+export const DEFAULT_NAME = 'sora'
+/** The default name before version 2 of the saved settings. */
+const OLD_DEFAULT_NAME = 'buddy'
+
 let reactionTimer = 0
 
 /** What the buddy is actually showing: a reaction, else its ambient mood over idle, else its set mood. */
@@ -70,7 +75,7 @@ export function shownMood(s: Pick<BuddyStore, 'reaction' | 'ambient' | 'state'>)
 export const useBuddyStore = create<BuddyStore>()(
   persist(
     (set, get) => ({
-      name: 'buddy',
+      name: DEFAULT_NAME,
       look: {},
       size: 200,
       opacity: 1,
@@ -111,7 +116,14 @@ export const useBuddyStore = create<BuddyStore>()(
     }),
     {
       name: 'desktop-buddy/settings',
-      version: 1,
+      version: 2,
+      // Version 2 changed the default buddy. Anyone who hadn't finished the intro still has the
+      // old default rather than a name they chose, so they get the new one.
+      migrate: (saved, version) => {
+        const settings = saved as BuddySettings
+        if (version < 2 && settings.name === OLD_DEFAULT_NAME && !settings.onboarded) settings.name = DEFAULT_NAME
+        return settings as BuddyStore
+      },
       partialize: ({ name, look, size, opacity, followCursor, alwaysOnTop, onboarded, introStep }): BuddySettings => ({
         name,
         look,

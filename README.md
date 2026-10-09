@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/buddies.gif" alt="Nine different DesktopBuddy creatures breathing, blinking and turning to look when one of them reacts" width="100%">
+  <img src="docs/buddies.gif" alt="Nine different DesktopBuddy creatures breathing and blinking. One falls in love with heart eyes, one winks, one tilts its head, one gets dizzy, and the others turn to look." width="100%">
 </p>
 
 <h1 align="center">DesktopBuddy</h1>
@@ -11,7 +11,7 @@
 
 <p align="center">
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6">
-  <img alt="Status: early development" src="https://img.shields.io/badge/status-early%20development-f5a623">
+  <a href="#early-access"><img alt="Status: early access" src="https://img.shields.io/badge/status-early%20access-f5a623"></a>
   <img alt="Built with Electron" src="https://img.shields.io/badge/built%20with-Electron-47848F">
   <img alt="Made with AI assistance" src="https://img.shields.io/badge/made%20with-AI%20assistance-8A63D2">
 </p>
@@ -25,12 +25,12 @@ Give it a name and it grows a face. The name decides everything: its shape, its 
 Then it just lives there. It sits on top of your windows, keeps an eye on your cursor wherever it goes, and has opinions about its day. Maybe one day it'll even answer back when you type to it.
 
 <p align="center">
-  <img src="docs/moods.svg" alt="The default buddy in fifteen moods: idle, happy, sleepy, stressed, angry, bored, surprised, sad, curious, confused, love, wink, focused, smug and dizzy" width="720">
+  <img src="docs/moods.gif" alt="The default buddy in all fifteen moods, each one breathing and blinking: idle, happy, sleepy, stressed, angry, bored, surprised, sad, curious, confused, love, wink, focused, smug and dizzy" width="720">
 </p>
 
 ## What it can do
 
-**One of a kind.** Ten body shapes, five eye styles and a full colour wheel, mixed by name. Like one part but not the rest? Pin just that part and let the name decide everything else.
+**One of a kind.** Ten body shapes, five eye styles and a full colour wheel, mixed by name, plus six hand-drawn extras to choose from. Like one part but not the rest? Pin just that part and let the name decide everything else.
 
 **Alive, not looping.** It breathes, bobs, blinks and glances around on its own timing, so two buddies side by side rarely move in step.
 
@@ -40,7 +40,11 @@ Then it just lives there. It sits on top of your windows, keeps an eye on your c
 
 **It reacts to you.**
 
-- Pet it and it's happy, and now and then it winks back. Double-click and it jumps, startled. Keep petting and it falls in love.
+<p align="center">
+  <img src="docs/reactions.gif" alt="A cursor pets the buddy and it smiles, double-clicks it and it jumps, pets it a lot and it gets heart eyes, then shakes it about until it's dizzy" width="400">
+</p>
+
+- Pet it and it's happy, and now and then it winks back. Double-click it and it jumps, startled. Keep petting it and it falls in love.
 - Grab it and it looks surprised. Drop it and it squashes as it lands. Shake it around while you carry it and it gets dizzy.
 - Hover over it and it tilts its head, curious.
 - Leave your computer alone and it gets bored, then dozes off. It wakes up with a start when you come back.
@@ -70,12 +74,24 @@ Right-click your buddy to open the customise panel:
 
 Everything saves automatically, and your buddy is waiting just as you left it next time.
 
+## Early access
+
+DesktopBuddy is in early access. It works, but it's new, so expect the odd rough edge.
+
+1. Download `DesktopBuddy-Windows-0.1.0-Setup.exe` from the [latest release](https://github.com/jaineeldev/desktop_buddy/releases/latest).
+2. Run it. The installer isn't code-signed yet, so Windows SmartScreen may show "Windows protected your PC". Click **More info**, then **Run anyway**.
+3. Your new buddy wakes up and introduces itself.
+
+Want it there every time you log in? Right-click the DesktopBuddy icon in your system tray and tick **Start with Windows**.
+
+Found a bug or have an idea? [Open an issue](https://github.com/jaineeldev/desktop_buddy/issues). Early feedback shapes what comes next.
+
 ## Coming soon
 
 - **It notices your PC.** It reads your CPU and memory and reacts: stressed when your machine is working hard, sleepy when it's quiet.
 - **Stats at a glance.** A small panel beside your buddy with CPU, RAM and the time.
-- **Personality.** Speech bubbles, time-of-day greetings and comments on what your computer is up to.
-- **A proper install.** A Windows installer and an option to start with Windows.
+- **Personality.** Time-of-day greetings and little comments in speech bubbles about what your computer is up to.
+- **Automatic updates.** Your buddy will let you know when there's a new version and update itself. Until then, grab new versions from the releases page.
 
 Windows comes first. Linux and macOS may follow later.
 
@@ -88,7 +104,7 @@ These are ideas being explored, not promises. They aren't built yet, and they ma
 
 ## Made with AI help
 
-To be clear about how this app is made: AI has been used to help build DesktopBuddy from the start, and it still is. AI coding assistants, including Claude, help design the buddy, write code and draft docs like this one. I directs the project and decides what gets built and what ships.
+To be clear about how this app is made: AI has been used to help build DesktopBuddy from the start, and it still is. AI coding assistants, including Claude, help design the buddy, write code and draft docs like this one. I direct the project and decide what gets built and what ships.
 
 ---
 
@@ -116,6 +132,16 @@ npm run dev
 
 Right-click the buddy to customise it. To browse lots of faces at once, open `http://localhost:5173/?gallery` while the dev server is running.
 
+To build the Windows installer:
+
+```bash
+npm run build
+```
+
+It ends up in `release/<version>/` as `DesktopBuddy-Windows-<version>-Setup.exe`.
+
+If the build stops with "Cannot create symbolic link", turn on Windows Developer Mode and run it again. One of electron-builder's downloads contains macOS links that Windows only lets you create in that mode.
+
 ### 🧱 Tech Stack
 
 | Layer | Technology | Purpose |
@@ -125,27 +151,29 @@ Right-click the buddy to customise it. To browse lots of faces at once, open `ht
 | Desktop Shell | Electron + Vite | Transparent always-on-top window, click-through, tray |
 | State | Zustand | Moods, plus settings saved between restarts |
 | System Stats | C (native Node addon via `node-addon-api`) *(planned)* | CPU, RAM via Windows API |
-| Packaging | electron-builder *(planned)* | Windows installer |
+| Packaging | electron-builder | Windows installer |
 | AI Chat | Claude, GPT, Gemini, Ollama *(possible future)* | Typing to your buddy with your own API key |
 
 ### 📂 Project Structure
 
 ```
 desktop_buddy/
+├── build/                   # App icon for the installer
 ├── electron/
-│   ├── main.ts              # Window creation
+│   ├── main.ts              # Window creation, one-buddy-at-a-time lock
 │   ├── preload.ts           # Secure contextBridge IPC
-│   ├── tray.ts              # System tray menu
+│   ├── tray.ts              # Tray menu, with your buddy as the tray icon
 │   ├── cursor.ts            # Feeds the cursor position so the eyes can follow it
-│   ├── interaction.ts       # Click-through, dragging, always-on-top
+│   ├── interaction.ts       # Click-through, dragging, shake detection, always-on-top
 │   └── stats-bridge.ts      # (planned) Calls the C addon, exposes via IPC
 ├── src/
 │   ├── components/
 │   │   ├── Buddy/           # Face generator, moods, animation
+│   │   ├── Onboarding/      # The first-run intro
 │   │   ├── SettingsPanel/   # Right-click customise panel
-│   │   ├── StatHUD/         # (planned)
-│   │   └── SpeechBubble/    # (planned)
-│   ├── hooks/               # Cursor gaze, desktop mouse handling, (planned) system stats
+│   │   ├── SpeechBubble/    # What the buddy says
+│   │   └── StatHUD/         # (planned)
+│   ├── hooks/               # Gaze, mouse handling, reactions, tray icon, (planned) system stats
 │   ├── stores/              # Buddy state and saved settings
 │   ├── dev/Gallery.tsx      # Face browser, opened with ?gallery
 │   └── App.tsx
@@ -155,7 +183,7 @@ desktop_buddy/
 
 ### 🗺️ Roadmap
 
-DesktopBuddy is built in public, one phase at a time, with a C fundamentals track running alongside the app.
+DesktopBuddy is built in public, one phase at a time.
 
 #### Phase 1 — Project Scaffold
 > Get a transparent, frameless Electron window on screen with a placeholder mascot.
@@ -176,8 +204,8 @@ DesktopBuddy is built in public, one phase at a time, with a C fundamentals trac
 - [x] Implement an idle loop — buddy breathes, bobs and blinks on a timer
 - [x] Click interaction triggers `happy` state
 - [x] Reactions: petting, double-click, rapid petting, grab/drop/shake, hover, idle boredom and sleep, new looks, waking up on start
-- [ ] Click interaction also shows a speech bubble
 - [x] Build `SpeechBubble` component (appears, holds, fades out)
+- [ ] Click interaction also shows a speech bubble
 
 #### Phase 3 — C Stats Module
 > Write real C that reads system stats via the Windows API and exposes it to Electron.
@@ -213,8 +241,10 @@ DesktopBuddy is built in public, one phase at a time, with a C fundamentals trac
 
 - [x] First-run onboarding: introduce the buddy, let the user name it, and show how to pet, drag and customise it
 - [x] App icon (the pebble buddy) and a tray icon that shows your own buddy
-- [ ] Package with `electron-builder` for Windows
-- [ ] Auto-start on login
+- [x] Package with `electron-builder` for Windows
+- [x] Auto-start on login (a tray toggle in the installed app)
+- [ ] Publish the installer as a GitHub release
+- [ ] Automatic updates from GitHub Releases (`electron-updater`), announced by the buddy in a speech bubble
 - [x] Multiple buddy looks: every name is a different buddy, plus six hand-drawn extras
 - [ ] JSON manifest per character: sprite paths + dialogue pools
 - [ ] Exportable/shareable config files

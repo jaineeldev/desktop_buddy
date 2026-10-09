@@ -31,6 +31,15 @@ export function createTray(win: BrowserWindow) {
       },
     },
     { type: 'separator' },
+    {
+      // Only the installed app can do this; in development it would register the dev copy of Electron.
+      label: app.isPackaged ? 'Start with Windows' : 'Start with Windows (installed app only)',
+      type: 'checkbox',
+      enabled: app.isPackaged,
+      checked: app.isPackaged && app.getLoginItemSettings().openAtLogin,
+      click: (item) => app.setLoginItemSettings({ openAtLogin: item.checked }),
+    },
+    { type: 'separator' },
     { label: 'Quit', click: () => app.quit() },
   ])
 
