@@ -37,6 +37,7 @@ contextBridge.exposeInMainWorld('buddy', {
   onNewFace: (callback: () => void) => subscribe('buddy:new-face', callback),
   onOpenPanel: (callback: () => void) => subscribe('buddy:open-panel', callback),
   onShaken: (callback: () => void) => subscribe('buddy:shaken', callback),
+  onCarried: (callback: (speed: { vx: number; vy: number }) => void) => subscribe('buddy:carried', callback),
   onReplayIntro: (callback: () => void) => subscribe('buddy:replay-intro', callback),
   setClickThrough: (through: boolean) => ipcRenderer.send('window:click-through', through),
   dragStart: () => ipcRenderer.send('window:drag-start'),

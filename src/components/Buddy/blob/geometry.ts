@@ -93,7 +93,7 @@ const EYE_SAMPLES = 28
  * normalised to fit a 2×2 box. Starting a quarter-turn on keeps the right
  * lobe at angle 0 and the tip at the bottom, so eye-to-heart morphs don't twist.
  */
-function heartPoint(t: number): Pt {
+export function heartPoint(t: number): Pt {
   const s = t + Math.PI / 2
   const x = Math.sin(s) ** 3
   const y = -(13 * Math.cos(s) - 5 * Math.cos(2 * s) - 2 * Math.cos(3 * s) - Math.cos(4 * s)) / 16

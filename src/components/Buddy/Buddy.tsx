@@ -1,16 +1,53 @@
-import { AnimatePresence, animate, motion, useMotionValue, useTransform, type MotionValue } from 'framer-motion'
-import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
-import { useGaze } from '../../hooks/useGaze'
+import {
+  AnimatePresence,
+  animate,
+  motion,
+  useMotionValue,
+  useMotionValueEvent,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from 'framer-motion'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react'
+import { GAZE_TRAVEL, useGaze } from '../../hooks/useGaze'
 import type { BuddyState } from './BuddyStates'
 import { mixLab, oklch, toHex } from './blob/color'
-import { generateLook, type BuddyLook, type EyeSpec, type LookOverrides } from './blob/generate'
+import { CX, CY, generateLook, type BuddyLook, type EyeSpec, type LookOverrides } from './blob/generate'
+import { visorPath } from './blob/eyes'
 import { eyePath } from './blob/geometry'
 import { EXPRESSIONS, lerpPose, type EyePose, type Pose } from './expressions'
 import './buddy.css'
 
-/** Slightly underdamped, so a new mood lands with a small wobble. */
-const MORPH = { type: 'spring', stiffness: 320, damping: 22 } as const
+/** Quick, and slightly underdamped, so a new mood snaps in and lands with a small wobble. */
+const MORPH = { type: 'spring', stiffness: 480, damping: 26 } as const
 const POP_IN = { type: 'spring', stiffness: 420, damping: 18 } as const
+
+/** Loose and bouncy: the squish wobbles like jelly a few times before it settles. */
+const WOBBLE = { type: 'spring', stiffness: 380, damping: 9 } as const
+/** Firm and fast, so a press squashes the moment the button goes down. */
+const PRESS = { type: 'spring', stiffness: 700, damping: 32 } as const
+/** How flat a press squashes it, in squish units (1 is a big squash). */
+const PRESSED = 0.55
+/** Starting speeds for the squish: a bump squashes it, noticing the cursor makes it perk up. */
+const BUMP_KICK = 20
+const PERK_KICK = -6
+
+/** The body trails the eyes a little and overshoots, which reads as the head turning to look. */
+const FOLLOW = { stiffness: 120, damping: 11 }
+/** Degrees of lean per viewBox unit the eyes have turned. */
+const LEAN = 0.5
+/** How far the body rises or dips with the eyes, as a share of their travel. */
+const BODY_RISE = 0.25
+/** Squish per viewBox unit the eyes look down; looking up gives the same amount of stretch. */
+const CRANE = 0.06
+
+/** A loose pendulum, so a carried buddy swings behind the cursor and sways to rest after. */
+const SWING = { stiffness: 140, damping: 7 }
+/** Degrees of swing, and squish, per px/s of carrying speed. */
+const SWING_PER_SPEED = 0.014
+const MAX_SWING = 18
+const SQUISH_PER_SPEED = 0.0001
+const MAX_CARRY_SQUISH = 0.1
 
 interface BuddyProps {
   /** The same name always draws the same face. */
@@ -22,8 +59,12 @@ interface BuddyProps {
   size?: number
   /** Let the eyes follow the cursor. */
   gaze?: boolean
-  /** Bump this number to play a squash-and-stretch, e.g. when petted or dropped. */
+  /** Bump this number to play a squash-and-stretch, e.g. when dropped. */
   bounce?: number
+  /** Held down by the mouse: it squashes, then springs back when let go. */
+  pressed?: boolean
+  /** The cursor is over it: it perks up a little as it arrives. */
+  hovered?: boolean
 }
 
 export function Buddy({ name, overrides, ...rest }: BuddyProps) {
@@ -51,23 +92,87 @@ function usePose(target: Pose): MotionValue<Pose> {
   return pose
 }
 
-/** A quick squash-and-stretch each time `bounce` changes, skipping the first render. */
-function useJiggle(bounce: number): MotionValue<number> {
-  const jiggle = useMotionValue(0)
-  const seen = useRef(bounce)
+/**
+ * Squash (positive) and stretch (negative). It squashes while pressed and springs back past flat
+ * when let go; a bump or the cursor arriving kicks it, keeping whatever wobble is already going.
+ */
+function useSquish(bounce: number, pressed: boolean, hovered: boolean): MotionValue<number> {
+  const squish = useMotionValue(0)
+  const seen = useRef({ bounce, pressed, hovered })
+
   useEffect(() => {
-    if (seen.current === bounce) return
-    seen.current = bounce
-    const controls = animate(jiggle, [0, 1, -0.45, 0.15, 0], { duration: 0.5, ease: 'easeOut' })
-    return () => controls.stop()
-  }, [bounce, jiggle])
-  return jiggle
+    const last = seen.current
+    seen.current = { bounce, pressed, hovered }
+    const kick = (speed: number) => animate(squish, 0, { ...WOBBLE, velocity: squish.getVelocity() + speed })
+    if (pressed !== last.pressed) animate(squish, pressed ? PRESSED : 0, pressed ? PRESS : WOBBLE)
+    else if (bounce !== last.bounce) kick(BUMP_KICK)
+    else if (hovered && !last.hovered && !pressed) kick(PERK_KICK)
+  }, [bounce, pressed, hovered, squish])
+
+  useEffect(() => () => squish.stop(), [squish])
+  return squish
+}
+
+/** While carried, the buddy swings behind the cursor like it's hanging from your hand. */
+function useCarry(): { swing: MotionValue<number>; squish: MotionValue<number> } {
+  const swing = useSpring(0, SWING)
+  const squish = useSpring(0, SWING)
+  useEffect(
+    () =>
+      window.buddy?.onCarried(({ vx, vy }) => {
+        const clamp = (v: number, max: number) => Math.max(-max, Math.min(max, v))
+        swing.set(clamp(vx * SWING_PER_SPEED, MAX_SWING))
+        // Lifted fast, it stretches out below your hand; lowered fast, it bunches up.
+        squish.set(clamp(vy * SQUISH_PER_SPEED, MAX_CARRY_SQUISH))
+      }),
+    [swing, squish],
+  )
+  return { swing, squish }
 }
 
 /**
- * Wide poses are capped so the two eyes never run into each other. A visor's
- * halves overlap at rest; as a pose takes hold they pull apart into two eyes.
+ * Whether a pose value is far enough from zero to see. The tremor and dizzy loops only run
+ * while it is, because an endless CSS animation costs CPU every frame even at zero amplitude.
  */
+function useShowing(value: MotionValue<number>): boolean {
+  const [showing, setShowing] = useState(() => Math.abs(value.get()) > 0.02)
+  useMotionValueEvent(value, 'change', (v) => setShowing(Math.abs(v) > 0.02))
+  return showing
+}
+
+const BLINK: Keyframe[] = [
+  { transform: 'scaleY(1)', easing: 'ease-in' },
+  { transform: 'scaleY(0.08)', easing: 'ease-out' },
+  { transform: 'scaleY(1)' },
+]
+
+/** A quick second blink this often, and the gap between blinks varies this much either way. */
+const DOUBLE_BLINK_CHANCE = 0.15
+const BLINK_VARIANCE = 0.3
+
+/**
+ * Blinks on a timer, so nothing has to animate in the long gaps between blinks. The gaps vary
+ * and now and then it double-blinks, which looks far less mechanical than a steady beat.
+ */
+function useBlink(eyes: RefObject<SVGGElement>, { blink, blinkPhase }: BuddyLook['motion'], enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return
+    const duration = blink * 0.034
+    const shut = () => eyes.current?.querySelectorAll('.b-eye').forEach((eye) => eye.animate(BLINK, duration))
+    let again = 0
+    let timer = window.setTimeout(function close() {
+      shut()
+      if (Math.random() < DOUBLE_BLINK_CHANCE) again = window.setTimeout(shut, duration + 90)
+      timer = window.setTimeout(close, blink * (1 + (Math.random() * 2 - 1) * BLINK_VARIANCE))
+    }, blink + blinkPhase)
+    return () => {
+      window.clearTimeout(timer)
+      window.clearTimeout(again)
+    }
+  }, [eyes, blink, blinkPhase, enabled])
+}
+
+/** Wide poses are capped so the two eyes never run into each other. */
 function eyeOutline(eye: EyeSpec, p: EyePose, side: -1 | 1, gap: number, look: Pose): string {
   const apart = gap * 0.4
   const cap = Math.max(eye.hw, apart) * (1 - p.lock) + apart * p.lock
@@ -119,11 +224,13 @@ interface FaceProps extends Omit<BuddyProps, 'name' | 'overrides'> {
   look: BuddyLook
 }
 
-function Face({ name, look, mood, size = 200, gaze = true, bounce = 0 }: FaceProps) {
+function Face({ name, look, mood, size = 200, gaze = true, bounce = 0, pressed = false, hovered = false }: FaceProps) {
   const svgRef = useRef<SVGSVGElement>(null)
+  const eyesRef = useRef<SVGGElement>(null)
   const expression = EXPRESSIONS[mood]
   const pose = usePose(expression.pose)
-  const jiggle = useJiggle(bounce)
+  const squish = useSquish(bounce, pressed, hovered)
+  const carry = useCarry()
   const [left, right] = look.eyes
   const reducedMotion = useMemo(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])
   const eyesAt = useGaze(svgRef, {
@@ -132,92 +239,114 @@ function Face({ name, look, mood, size = 200, gaze = true, bounce = 0 }: FacePro
   })
 
   const gap = right.cx - left.cx
+  // A visor is one bar drawn as a single shape, so it never splits; the second eye stays empty.
+  const isVisor = look.eyeStyle === 'visor'
   const leftD = useTransform(() => {
     const p = pose.get()
-    return eyeOutline(left, p.left, -1, gap, p)
+    return isVisor ? visorPath(left, right, p.left, p.right, p) : eyeOutline(left, p.left, -1, gap, p)
   })
   const rightD = useTransform(() => {
     const p = pose.get()
-    return eyeOutline(right, p.right, 1, gap, p)
+    return isVisor ? '' : eyeOutline(right, p.right, 1, gap, p)
   })
 
-  // The eyes lead and the body follows a little, which reads as the head turning.
-  const eyesX = useTransform(() => eyesAt.x.get() * pose.get().gaze)
-  const eyesY = useTransform(() => eyesAt.y.get() * pose.get().gaze)
-  const bodyX = useTransform(() => eyesAt.x.get() * pose.get().gaze * 0.2)
-  const bodyY = useTransform(() => pose.get().bodyY + eyesAt.y.get() * pose.get().gaze * 0.15)
-  const rotate = useTransform(() => pose.get().bodyTilt)
-  const scaleX = useTransform(() => (1 + pose.get().squash) * (1 + 0.12 * jiggle.get()))
-  const scaleY = useTransform(() => (1 - pose.get().squash) * (1 - 0.14 * jiggle.get()))
+  // Each face rests with its eyes a little off-centre, which is part of its character. Left in
+  // place while following the cursor, that offset would let a buddy look much further one way
+  // than the other, so it fades out as the eyes turn, up and down as well as sideways.
+  const { x: restX, y: restY } = look.eyeRest
+  const settle = (turn: number, rest: number) => turn - rest * Math.min(1, Math.abs(turn) / GAZE_TRAVEL)
+
+  // The eyes lead and the body follows a beat later, leaning in, which reads as the head turning.
+  const followX = useSpring(eyesAt.x, FOLLOW)
+  const followY = useSpring(eyesAt.y, FOLLOW)
+  const eyesX = useTransform(() => settle(eyesAt.x.get() * pose.get().gaze, restX))
+  const eyesY = useTransform(() => settle(eyesAt.y.get() * pose.get().gaze, restY))
+  const bodyX = useTransform(() => followX.get() * pose.get().gaze * 0.2)
+  const bodyY = useTransform(() => pose.get().bodyY + followY.get() * pose.get().gaze * BODY_RISE)
+  const rotate = useTransform(() => pose.get().bodyTilt + followX.get() * pose.get().gaze * LEAN)
+  // Looking up it stretches tall, as if craning its neck; looking down it settles.
+  const squishAll = () => squish.get() + carry.squish.get() + followY.get() * pose.get().gaze * CRANE
+  const scaleX = useTransform(() => (1 + pose.get().squash) * (1 + 0.12 * squishAll()))
+  const scaleY = useTransform(() => (1 - pose.get().squash) * (1 - 0.14 * squishAll()))
   const shake = useTransform(() => pose.get().shake)
   const wobble = useTransform(() => pose.get().wobble)
+  const shaking = useShowing(shake)
+  const dizzy = useShowing(wobble)
   const fill = useTransform(() => {
     const { tint, tintHue, tintChroma } = pose.get()
     return toHex(tint < 0.002 ? look.body : mixLab(look.body, oklch(look.body[0], tintChroma, tintHue), tint))
   })
 
-  const ground = `50px ${look.ground}px`
+  useBlink(eyesRef, look.motion, expression.blink && !reducedMotion)
+
   const timing = {
     '--b-rate': expression.rate,
     '--b-breathe-phase': `${look.motion.breathePhase}ms`,
     '--b-bob-phase': `${look.motion.bobPhase}ms`,
-    '--b-blink': `${look.motion.blink}ms`,
-    '--b-blink-phase': `${look.motion.blinkPhase}ms`,
+    '--b-sway-phase': `${look.motion.swayPhase}ms`,
   } as CSSProperties
+  const ground = `50% ${look.ground}%`
+  // Carried by the top of its body, which sits as far above the centre as the ground is below.
+  const hangY = 2 * CY - look.ground
 
+  // Breathing, bobbing and swaying move the whole picture, so they run on plain HTML wrappers, which
+  // the GPU can animate on its own. The same loops on SVG groups would redraw the buddy every frame.
   return (
-    <motion.svg
-      ref={svgRef}
-      className={expression.blink ? 'buddy' : 'buddy buddy--still-eyes'}
-      viewBox="0 0 100 100"
-      width={size}
-      height={size}
-      role="img"
-      aria-label={`${name}, feeling ${mood}`}
-      style={timing}
-      initial={{ scale: 0.6, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={POP_IN}
-    >
-      <motion.g className="b-shake" style={{ '--b-shake': shake } as never}>
-        <g className="b-breathe" style={{ transformOrigin: ground }}>
-          <g className="b-bob">
-            {/* data-hit marks the painted buddy, so clicks on empty space can pass through to the desktop. */}
-            <motion.g
-              data-hit
-              style={{
-                x: bodyX,
-                y: bodyY,
-                rotate,
-                scaleX,
-                scaleY,
-                transformBox: 'view-box',
-                originX: '50px',
-                originY: `${look.ground}px`,
-              }}
-            >
-              <motion.g style={{ fill }}>
-                {look.parts.map((d, i) => (
-                  <path key={i} d={d} />
-                ))}
-              </motion.g>
-              <motion.g fill={toHex(look.eye)} style={{ x: eyesX, y: eyesY, '--b-wobble': wobble } as never}>
-                <g className="b-orbit">
-                  <g className="b-eye">
-                    <motion.path d={leftD} />
-                  </g>
-                </g>
-                <g className="b-orbit b-orbit--reverse">
-                  <g className="b-eye">
-                    <motion.path d={rightD} />
-                  </g>
-                </g>
+    <div className="b-breathe" style={{ ...timing, transformOrigin: ground }}>
+      <div className="b-bob">
+        <div className="b-sway" style={{ transformOrigin: ground }}>
+          <motion.svg
+            ref={svgRef}
+            className="buddy"
+            viewBox="0 0 100 100"
+            width={size}
+            height={size}
+            role="img"
+            aria-label={`${name}, feeling ${mood}`}
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={POP_IN}
+          >
+            <motion.g className={shaking ? 'b-shake' : undefined} style={{ '--b-shake': shake } as never}>
+              <motion.g style={{ rotate: carry.swing, transformBox: 'view-box', originX: `${CX}px`, originY: `${hangY}px` }}>
+                {/* data-hit marks the painted buddy, so clicks on empty space can pass through to the desktop. */}
+                <motion.g
+                  data-hit
+                  style={{
+                    x: bodyX,
+                    y: bodyY,
+                    rotate,
+                    scaleX,
+                    scaleY,
+                    transformBox: 'view-box',
+                    originX: '50px',
+                    originY: `${look.ground}px`,
+                  }}
+                >
+                  <motion.g style={{ fill }}>
+                    {look.parts.map((d, i) => (
+                      <path key={i} d={d} />
+                    ))}
+                  </motion.g>
+                  <motion.g ref={eyesRef} fill={toHex(look.eye)} style={{ x: eyesX, y: eyesY, '--b-wobble': wobble } as never}>
+                    <g className={dizzy ? 'b-orbit' : undefined}>
+                      <g className="b-eye">
+                        <motion.path d={leftD} />
+                      </g>
+                    </g>
+                    <g className={dizzy ? 'b-orbit b-orbit--reverse' : undefined}>
+                      <g className="b-eye">
+                        <motion.path d={rightD} />
+                      </g>
+                    </g>
+                  </motion.g>
+                </motion.g>
               </motion.g>
             </motion.g>
-          </g>
-        </g>
-      </motion.g>
-      <AnimatePresence>{expression.effect === 'hearts' && <Hearts key="hearts" look={look} />}</AnimatePresence>
-    </motion.svg>
+            <AnimatePresence>{expression.effect === 'hearts' && <Hearts key="hearts" look={look} />}</AnimatePresence>
+          </motion.svg>
+        </div>
+      </div>
+    </div>
   )
 }

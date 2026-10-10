@@ -1,6 +1,9 @@
 import { BrowserWindow, ipcMain, screen, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron'
 
-const DRAG_MS = 1000 / 60
+/** Faster than the display, so the buddy stays right under the cursor while carried. */
+const DRAG_MS = 1000 / 120
+/** How much of each new speed reading to take. The cursor and the timer don't tick in step, so raw readings jitter. */
+const SPEED_SMOOTHING = 0.35
 
 let drag: { win: BrowserWindow; timer: ReturnType<typeof setInterval> } | null = null
 
@@ -42,6 +45,8 @@ function shakeDetector(onShake: () => void) {
 function stopDrag() {
   if (!drag) return
   clearInterval(drag.timer)
+  // Let go, so it swings back to rest.
+  if (!drag.win.isDestroyed()) drag.win.webContents.send('buddy:carried', { vx: 0, vy: 0 })
   drag = null
 }
 
@@ -64,12 +69,29 @@ export function registerWindowControls() {
     const bounds = win.getBounds()
     const grab = { x: start.x - bounds.x, y: start.y - bounds.y }
     const shake = shakeDetector(() => win.webContents.send('buddy:shaken'))
+    let last = { x: bounds.x, y: bounds.y, at: performance.now() }
+    const speed = { x: 0, y: 0 }
+    let sent = ''
     const timer = setInterval(() => {
       if (win.isDestroyed()) return stopDrag()
       const cursor = screen.getCursorScreenPoint()
       shake(cursor)
-      // setBounds with a fixed size: setPosition alone can grow the window on scaled Windows displays.
-      win.setBounds({ x: cursor.x - grab.x, y: cursor.y - grab.y, width: bounds.width, height: bounds.height })
+      const x = cursor.x - grab.x
+      const y = cursor.y - grab.y
+      const now = performance.now()
+      const dt = Math.max(now - last.at, 1) / 1000
+      speed.x += ((x - last.x) / dt - speed.x) * SPEED_SMOOTHING
+      speed.y += ((y - last.y) / dt - speed.y) * SPEED_SMOOTHING
+      if (x !== last.x || y !== last.y) {
+        // setBounds with a fixed size: setPosition alone can grow the window on scaled Windows displays.
+        win.setBounds({ x, y, width: bounds.width, height: bounds.height })
+      }
+      last = { x, y, at: now }
+      // The renderer swings the buddy from this; px per second.
+      const carried = { vx: Math.round(speed.x), vy: Math.round(speed.y) }
+      const key = `${carried.vx},${carried.vy}`
+      if (key !== sent) win.webContents.send('buddy:carried', carried)
+      sent = key
     }, DRAG_MS)
     drag = { win, timer }
   })

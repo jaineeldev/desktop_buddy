@@ -1,6 +1,6 @@
 import { toHex } from './blob/color'
+import { restingEyePaths } from './blob/eyes'
 import type { BuddyLook } from './blob/generate'
-import { eyePath } from './blob/geometry'
 
 /** A resting buddy with no motion, for previews where dozens may be on screen at once. */
 export function BuddyStill({ look, size }: { look: BuddyLook; size: number }) {
@@ -12,8 +12,8 @@ export function BuddyStill({ look, size }: { look: BuddyLook; size: number }) {
         ))}
       </g>
       <g fill={toHex(look.eye)}>
-        {look.eyes.map((e, i) => (
-          <path key={i} d={eyePath(e.cx, e.cy, e.hw, e.hh, e.n, e.flat, 0, e.lean)} />
+        {restingEyePaths(look).map((d, i) => (
+          <path key={i} d={d} />
         ))}
       </g>
     </svg>

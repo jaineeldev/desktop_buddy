@@ -56,6 +56,8 @@ function createWindow() {
     alwaysOnTop: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
+      // The only text box is the buddy's name, which wouldn't be in a dictionary anyway.
+      spellcheck: false,
     },
   })
 

@@ -1,18 +1,15 @@
 /*
- * Idle life runs in CSS: breathing, bobbing, blinking and the tremor.
+ * Idle life runs in CSS: breathing, bobbing, swaying, the tremor and the dizzy circling.
  * Timings come from the buddy's name (set inline as custom properties),
- * so no two buddies move in step. Moods only change --b-rate and --b-shake.
+ * so no two buddies move in step. Moods change --b-rate, --b-shake and --b-wobble.
+ * Blinks are timed from Buddy.tsx, so nothing animates between them.
  */
 .buddy {
   display: block;
   overflow: visible;
 }
 
-.b-breathe,
-.b-bob {
-  transform-box: view-box;
-}
-
+/* Breathing, bobbing and swaying sit on HTML wrappers so the GPU animates them without redrawing the SVG. */
 .b-breathe {
   animation: b-breathe calc(2.8s * var(--b-rate, 1)) ease-in-out var(--b-breathe-phase, 0s) infinite alternate;
 }
@@ -23,16 +20,32 @@
   }
 }
 
+/* A percentage of the buddy's own height, so the bob is the same 1.3 viewBox units at any size. */
 .b-bob {
   animation: b-bob calc(3.4s * var(--b-rate, 1)) ease-in-out var(--b-bob-phase, 0s) infinite alternate;
 }
 
 @keyframes b-bob {
   to {
-    transform: translateY(-1.3px);
+    transform: translateY(-1.3%);
   }
 }
 
+/* A slow lean from side to side, rocking on its base. */
+.b-sway {
+  animation: b-sway calc(4.6s * var(--b-rate, 1)) ease-in-out var(--b-sway-phase, 0s) infinite alternate;
+}
+
+@keyframes b-sway {
+  from {
+    transform: rotate(-1.2deg);
+  }
+  to {
+    transform: rotate(1.2deg);
+  }
+}
+
+/* Only set while the buddy is trembling; Buddy.tsx adds the class. */
 .b-shake {
   animation: b-shake 0.11s linear infinite;
 }
@@ -56,29 +69,9 @@
 .b-eye {
   transform-box: fill-box;
   transform-origin: center;
-  animation: b-blink var(--b-blink, 4.8s) linear var(--b-blink-phase, 0s) infinite;
 }
 
-.buddy--still-eyes .b-eye {
-  animation: none;
-}
-
-@keyframes b-blink {
-  0%,
-  96.6% {
-    transform: scaleY(1);
-    animation-timing-function: ease-in;
-  }
-  98.3% {
-    transform: scaleY(0.08);
-    animation-timing-function: ease-out;
-  }
-  100% {
-    transform: scaleY(1);
-  }
-}
-
-/* Dizzy: each eye circles, the two in opposite directions. Amplitude comes from --b-wobble. */
+/* Dizzy: each eye circles, the two in opposite directions. Amplitude comes from --b-wobble; only set while dizzy. */
 .b-orbit {
   animation: b-orbit 0.9s linear infinite;
 }
@@ -142,8 +135,8 @@
 @media (prefers-reduced-motion: reduce) {
   .b-breathe,
   .b-bob,
+  .b-sway,
   .b-shake,
-  .b-eye,
   .b-orbit {
     animation: none;
   }

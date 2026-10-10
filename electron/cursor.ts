@@ -1,6 +1,7 @@
 import { BrowserWindow, screen } from 'electron'
 
-const POLL_MS = 1000 / 30
+/** Once per frame on most displays, so the eyes glide after the cursor instead of hopping. Only moves are sent on. */
+const POLL_MS = 1000 / 60
 
 /**
  * The renderer only sees pointer events over its own window, so the main

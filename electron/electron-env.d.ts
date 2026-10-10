@@ -32,6 +32,8 @@ interface Window {
     onOpenPanel(callback: () => void): () => void
     /** Fires once per drag when the buddy is shaken back and forth. */
     onShaken(callback: () => void): () => void
+    /** How fast the buddy is being carried, in px per second; zero once it's let go. */
+    onCarried(callback: (speed: { vx: number; vy: number }) => void): () => void
     onReplayIntro(callback: () => void): () => void
     /** While true, clicks fall through the window to whatever is behind it. */
     setClickThrough(through: boolean): void

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { toHex } from '../components/Buddy/blob/color'
+import { restingEyePaths } from '../components/Buddy/blob/eyes'
 import type { BuddyLook } from '../components/Buddy/blob/generate'
-import { eyePath } from '../components/Buddy/blob/geometry'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 /** Waits for the look to settle, so dragging a slider doesn't redraw the tray on every frame. */
@@ -10,8 +10,8 @@ const DEBOUNCE_MS = 250
 /** The resting buddy, cropped tight to its body. Bigger `eyeBoost` keeps the face readable at tray sizes. */
 function iconSvg(look: BuddyLook, eyeBoost: number, size: number): string {
   const body = look.parts.map((d) => `<path d="${d}"/>`).join('')
-  const eyes = look.eyes
-    .map((e) => `<path d="${eyePath(e.cx, e.cy, e.hw * eyeBoost, e.hh * eyeBoost, e.n, e.flat, 0, e.lean)}"/>`)
+  const eyes = restingEyePaths(look, eyeBoost)
+    .map((d) => `<path d="${d}"/>`)
     .join('')
 
   // Measure the real outline in the DOM, which handles every shape's path commands.

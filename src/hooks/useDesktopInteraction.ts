@@ -14,6 +14,8 @@ interface Options {
   onClick: () => void
   onMenu: () => void
   onHoverChange?: (hovering: boolean) => void
+  /** The button went down on the buddy (true), or the press ended or became a drag (false). */
+  onPressChange?: (pressed: boolean) => void
   onDragStart?: () => void
   onDragEnd?: () => void
 }
@@ -35,6 +37,13 @@ export function useDesktopInteraction(options: Options) {
     hovering.current = next
     latest.current.onHoverChange?.(next)
   }, [])
+
+  const pressing = useRef(false)
+  const setPressed = (next: boolean) => {
+    if (next === pressing.current) return
+    pressing.current = next
+    latest.current.onPressChange?.(next)
+  }
 
   useEffect(() => {
     const bridge = window.buddy
@@ -94,6 +103,7 @@ export function useDesktopInteraction(options: Options) {
       if (e.button !== 0 || !isHit(e.target)) return
       e.currentTarget.setPointerCapture(e.pointerId)
       press.current = { x: e.screenX, y: e.screenY, dragging: false }
+      setPressed(true)
     },
     onPointerMove(e: PointerEvent<HTMLElement>) {
       // Outside Electron there's no cursor feed, so hover comes from the pointer itself.
@@ -102,6 +112,7 @@ export function useDesktopInteraction(options: Options) {
       if (!p || p.dragging) return
       if (Math.hypot(e.screenX - p.x, e.screenY - p.y) < DRAG_THRESHOLD) return
       p.dragging = true
+      setPressed(false)
       document.documentElement.dataset.dragging = ''
       window.buddy?.dragStart()
       latest.current.onDragStart?.()
@@ -112,6 +123,7 @@ export function useDesktopInteraction(options: Options) {
     onPointerUp() {
       const p = press.current
       press.current = null
+      setPressed(false)
       if (!p) return
       if (p.dragging) endDrag()
       else latest.current.onClick()
@@ -120,6 +132,7 @@ export function useDesktopInteraction(options: Options) {
       // Capture can vanish without a pointerup, for example when another window steals focus.
       if (press.current?.dragging) endDrag()
       press.current = null
+      setPressed(false)
     },
     onContextMenu(e: MouseEvent<HTMLElement>) {
       e.preventDefault()

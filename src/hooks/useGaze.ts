@@ -1,11 +1,14 @@
 import { useSpring, type MotionValue } from 'framer-motion'
 import { useEffect, type RefObject } from 'react'
 
-/** Quick and only lightly springy, like a real eye jumping to a target. */
-const SACCADE = { stiffness: 260, damping: 24, mass: 0.6 }
+/** Snaps to a target like a real eye, overshooting a touch before it settles. */
+const SACCADE = { stiffness: 420, damping: 21, mass: 0.6 }
 
 /** After this long without the cursor moving, the buddy starts glancing around on its own. */
 const IDLE_AFTER_MS = 3500
+
+/** How far the eyes turn toward the cursor by default, in viewBox units. */
+export const GAZE_TRAVEL = 3.4
 
 interface GazeOptions {
   /** Point between the eyes, in viewBox units. */
@@ -22,7 +25,7 @@ interface GazeOptions {
  */
 export function useGaze(
   svgRef: RefObject<SVGSVGElement>,
-  { center, travel = 3.4, enabled = true }: GazeOptions,
+  { center, travel = GAZE_TRAVEL, enabled = true }: GazeOptions,
 ): { x: MotionValue<number>; y: MotionValue<number> } {
   const x = useSpring(0, SACCADE)
   const y = useSpring(0, SACCADE)
@@ -49,7 +52,7 @@ export function useGaze(
       // Close targets get a small turn; far ones saturate at `travel`.
       const reach = travel * (1 - Math.exp(-dist / 140))
       x.set((dx / dist) * reach)
-      y.set((dy / dist) * reach * 0.75)
+      y.set((dy / dist) * reach)
     }
 
     const glance = () => {
@@ -57,7 +60,7 @@ export function useGaze(
         const angle = Math.random() * Math.PI * 2
         const reach = Math.random() < 0.3 ? 0 : travel * (0.3 + Math.random() * 0.4)
         x.set(Math.cos(angle) * reach)
-        y.set(Math.sin(angle) * reach * 0.7)
+        y.set(Math.sin(angle) * reach)
       }
       glanceTimer = window.setTimeout(glance, 1200 + Math.random() * 2200)
     }

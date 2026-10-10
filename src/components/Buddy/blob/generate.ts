@@ -110,12 +110,14 @@ export interface BuddyLook {
   /** Lowest point of the body, which breathing and squashing anchor to. */
   ground: number
   eyes: readonly [left: EyeSpec, right: EyeSpec]
+  /** How far the pair of eyes rests from the middle of the face. Part of each buddy's character. */
+  eyeRest: { x: number; y: number }
   body: Lab
   eye: Lab
   hue: number
   tone: ToneName
   /** Per-buddy timings in ms, so two buddies side by side never breathe in step. */
-  motion: { breathePhase: number; bobPhase: number; blink: number; blinkPhase: number }
+  motion: { breathePhase: number; bobPhase: number; swayPhase: number; blink: number; blinkPhase: number }
 }
 
 interface Face {
@@ -133,8 +135,8 @@ interface Silhouette {
 }
 
 /** All geometry lives in a 100 × 100 viewBox. */
-const CX = 50
-const CY = 53
+export const CX = 50
+export const CY = 53
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const signed = (t: TraitFn, key: string) => t(key) * 2 - 1
@@ -394,7 +396,7 @@ function silhouette(shape: ShapeName, t: TraitFn, R: number): Silhouette {
   }
 }
 
-function placeEyes(style: EyeStyle, t: TraitFn, R: number, face: Face): [EyeSpec, EyeSpec] {
+function placeEyes(style: EyeStyle, t: TraitFn, R: number, face: Face): Pick<BuddyLook, 'eyes' | 'eyeRest'> {
   const size = t('eye.size')
   const ratio = t('eye.ratio')
   const square = t('eye.squareness')
@@ -466,10 +468,12 @@ function placeEyes(style: EyeStyle, t: TraitFn, R: number, face: Face): [EyeSpec
     sep /= worst
     gx /= worst
     gy /= worst
+    drop /= worst
   }
 
   const eye = (side: number): EyeSpec => ({ cx: face.x + side * sep + gx, cy: face.y + gy, hw, hh, n, flat, lean })
-  return [eye(-1), eye(1)]
+  // The rest leaves out a dome's drop, which only centres its weight on the face.
+  return { eyes: [eye(-1), eye(1)], eyeRest: { x: gx, y: gy - drop } }
 }
 
 /** The body colour a tone and hue produce, before any contrast correction. */
@@ -508,11 +512,12 @@ export function generateLook(name: string, overrides: LookOverrides = {}): Buddy
     eyeStyle,
     parts,
     ground,
-    eyes: placeEyes(eyeStyle, t, R, face),
+    ...placeEyes(eyeStyle, t, R, face),
     ...colours(t, overrides),
     motion: {
       breathePhase: -Math.round(t('motion.breathe') * 2800),
       bobPhase: -Math.round(t('motion.bob') * 3400),
+      swayPhase: -Math.round(t('motion.sway') * 4600),
       blink,
       blinkPhase: -Math.round(t('motion.blinkPhase') * blink),
     },

@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'framer-motion'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { Buddy } from './components/Buddy/Buddy'
 import { generateLook } from './components/Buddy/blob/generate'
@@ -32,6 +32,8 @@ function App() {
     })),
   )
   const launchedAt = useRef(Date.now())
+  const [pressed, setPressed] = useState(false)
+  const [hovered, setHovered] = useState(false)
 
   const reactions = useReactions()
   const interaction = useDesktopInteraction({
@@ -41,7 +43,11 @@ function App() {
       if (panelOpen) closePanel()
       else void openPanel()
     },
-    onHoverChange: reactions.hover,
+    onHoverChange: (on) => {
+      setHovered(on)
+      reactions.hover(on)
+    },
+    onPressChange: setPressed,
     onDragStart: reactions.grab,
     onDragEnd: reactions.drop,
   })
@@ -77,7 +83,16 @@ function App() {
   return (
     <div className="stage">
       <div className="stage-buddy" style={{ opacity }} {...interaction}>
-        <Buddy name={name} overrides={look} mood={mood} size={size} gaze={followCursor} bounce={bounce} />
+        <Buddy
+          name={name}
+          overrides={look}
+          mood={mood}
+          size={size}
+          gaze={followCursor}
+          bounce={bounce}
+          pressed={pressed}
+          hovered={hovered}
+        />
       </div>
       {!onboarded && <Onboarding startDelay={introDelay} />}
       <AnimatePresence>{panelOpen && <SettingsPanel key="settings" />}</AnimatePresence>

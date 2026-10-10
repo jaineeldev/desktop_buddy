@@ -58,7 +58,7 @@ export function useReactions() {
         const quick = now - s.lastClick < DOUBLE_CLICK_MS
         s.lastClick = now
         s.pets = s.pets.filter((t) => now - t < LOVE_WINDOW_MS).concat(now)
-        store().bump()
+        // No bump: the press already squashed it, and letting go springs it back.
         store().notePet()
         // Petting a buddy that's already in love keeps it there.
         if (s.pets.length >= LOVE_PETS || store().reaction === 'love') {
