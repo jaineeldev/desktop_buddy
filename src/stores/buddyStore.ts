@@ -26,6 +26,8 @@ export interface BuddySettings {
   onboarded: boolean
   /** The intro step you'd reached, so a restart picks up there instead of starting over. */
   introStep: string | null
+  /** The app version that last ran, so the buddy can tell when it has just been updated. */
+  lastVersion: string | null
 }
 
 interface BuddyStore extends BuddySettings {
@@ -41,6 +43,8 @@ interface BuddyStore extends BuddySettings {
   pets: number
   drops: number
   panelOpen: boolean
+  /** The version whose what's new card is open, if any. */
+  whatsNew: string | null
   screenSpace: ScreenSpace | null
   update: (settings: Partial<BuddySettings>) => void
   setName: (name: string) => void
@@ -55,15 +59,19 @@ interface BuddyStore extends BuddySettings {
   noteDrop: () => void
   openPanel: () => Promise<void>
   closePanel: () => void
+  openWhatsNew: (version: string) => Promise<void>
+  closeWhatsNew: () => void
 }
 
 export const SIZE_RANGE = { min: 120, max: 280 } as const
 export const OPACITY_RANGE = { min: 0.3, max: 1 } as const
 
 /** A new buddy's name, and so its face: a bright cyan squircle with dot eyes, matching the app icon. */
-export const DEFAULT_NAME = 'sora'
+export const DEFAULT_NAME = 'Sora'
 /** The default name before version 2 of the saved settings. */
 const OLD_DEFAULT_NAME = 'buddy'
+/** Version 2's default, before it was capitalised. */
+const LOWERCASE_DEFAULT_NAME = 'sora'
 
 let reactionTimer = 0
 
@@ -83,6 +91,7 @@ export const useBuddyStore = create<BuddyStore>()(
       alwaysOnTop: true,
       onboarded: false,
       introStep: null,
+      lastVersion: null,
       state: 'idle',
       reaction: null,
       ambient: null,
@@ -90,6 +99,7 @@ export const useBuddyStore = create<BuddyStore>()(
       pets: 0,
       drops: 0,
       panelOpen: false,
+      whatsNew: null,
       screenSpace: null,
       update: (settings) => set(settings),
       setName: (name) => set({ name }),
@@ -110,21 +120,29 @@ export const useBuddyStore = create<BuddyStore>()(
       openPanel: async () => {
         // Ask where the screen edges are first, so the panel opens on the right side straight away.
         const screenSpace = (await window.buddy?.getScreenSpace()) ?? null
-        set({ panelOpen: true, screenSpace })
+        // One card beside the buddy at a time.
+        set({ panelOpen: true, whatsNew: null, screenSpace })
       },
       closePanel: () => set({ panelOpen: false }),
+      openWhatsNew: async (version) => {
+        const screenSpace = (await window.buddy?.getScreenSpace()) ?? null
+        set({ whatsNew: version, panelOpen: false, screenSpace })
+      },
+      closeWhatsNew: () => set({ whatsNew: null }),
     }),
     {
       name: 'desktop-buddy/settings',
-      version: 2,
-      // Version 2 changed the default buddy. Anyone who hadn't finished the intro still has the
-      // old default rather than a name they chose, so they get the new one.
+      version: 3,
       migrate: (saved, version) => {
         const settings = saved as BuddySettings
+        // Version 2 changed the default buddy. Anyone who hadn't finished the intro still has the
+        // old default rather than a name they chose, so they get the new one.
         if (version < 2 && settings.name === OLD_DEFAULT_NAME && !settings.onboarded) settings.name = DEFAULT_NAME
+        // Version 3 capitalised it. Names don't care about case, so the face stays exactly the same.
+        if (version < 3 && settings.name === LOWERCASE_DEFAULT_NAME) settings.name = DEFAULT_NAME
         return settings as BuddyStore
       },
-      partialize: ({ name, look, size, opacity, followCursor, alwaysOnTop, onboarded, introStep }): BuddySettings => ({
+      partialize: ({ name, look, size, opacity, followCursor, alwaysOnTop, onboarded, introStep, lastVersion }): BuddySettings => ({
         name,
         look,
         size,
@@ -133,6 +151,7 @@ export const useBuddyStore = create<BuddyStore>()(
         alwaysOnTop,
         onboarded,
         introStep,
+        lastVersion,
       }),
     },
   ),

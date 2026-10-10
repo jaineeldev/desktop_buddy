@@ -8,7 +8,7 @@ import {
   useTransform,
   type MotionValue,
 } from 'framer-motion'
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react'
 import { GAZE_TRAVEL, useGaze } from '../../hooks/useGaze'
 import type { BuddyState } from './BuddyStates'
 import { mixLab, oklch, toHex } from './blob/color'
@@ -227,6 +227,7 @@ interface FaceProps extends Omit<BuddyProps, 'name' | 'overrides'> {
 function Face({ name, look, mood, size = 200, gaze = true, bounce = 0, pressed = false, hovered = false }: FaceProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const eyesRef = useRef<SVGGElement>(null)
+  const bodyRef = useRef<SVGGElement>(null)
   const expression = EXPRESSIONS[mood]
   const pose = usePose(expression.pose)
   const squish = useSquish(bounce, pressed, hovered)
@@ -286,8 +287,13 @@ function Face({ name, look, mood, size = 200, gaze = true, bounce = 0, pressed =
     '--b-sway-phase': `${look.motion.swayPhase}ms`,
   } as CSSProperties
   const ground = `50% ${look.ground}%`
-  // Carried by the top of its body, which sits as far above the centre as the ground is below.
-  const hangY = 2 * CY - look.ground
+  // Carried by the top of its head. Every shape's outline is different, so it's measured once drawn;
+  // until then, the top is guessed to sit as far above the centre as the ground is below.
+  const [hangY, setHangY] = useState(2 * CY - look.ground)
+  useLayoutEffect(() => {
+    const box = bodyRef.current?.getBBox()
+    if (box) setHangY(box.y)
+  }, [look.parts])
 
   // Breathing, bobbing and swaying move the whole picture, so they run on plain HTML wrappers, which
   // the GPU can animate on its own. The same loops on SVG groups would redraw the buddy every frame.
@@ -323,7 +329,7 @@ function Face({ name, look, mood, size = 200, gaze = true, bounce = 0, pressed =
                     originY: `${look.ground}px`,
                   }}
                 >
-                  <motion.g style={{ fill }}>
+                  <motion.g ref={bodyRef} style={{ fill }}>
                     {look.parts.map((d, i) => (
                       <path key={i} d={d} />
                     ))}

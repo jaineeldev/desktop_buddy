@@ -32,21 +32,21 @@ Then it just lives there. It sits on top of your windows, keeps an eye on your c
 
 **One of a kind.** Ten body shapes, five eye styles and a full colour wheel, mixed by name, plus six hand-drawn extras to choose from. Like one part but not the rest? Pin just that part and let the name decide everything else.
 
-**Alive, not looping.** It breathes, bobs, blinks and glances around on its own timing, so two buddies side by side rarely move in step.
+**Alive, not looping.** It breathes, bobs, sways, blinks and glances around on its own timing, with the odd double blink, so two buddies side by side rarely move in step.
 
-**Always watching.** Its eyes follow your cursor anywhere on the screen, not just when you're close. Leave the mouse alone and it starts looking around by itself.
+**Always watching.** Its eyes follow your cursor anywhere on the screen, up and down as well as side to side, and its body leans in a beat later, like it's turning to look. Leave the mouse alone and it starts looking around by itself.
 
 **Moods you can read.** Fifteen of them, from happy, sad and sleepy to curious, confused, smug and dizzy, each with its own face and body language. An angry buddy flushes red and trembles, a sad one loses its colour, and one in love gets heart eyes as little hearts float up around it.
 
 **It reacts to you.**
 
 <p align="center">
-  <img src="docs/reactions.gif" alt="A cursor pets the buddy and it smiles, double-clicks it and it jumps, pets it a lot and it gets heart eyes, then shakes it about until it's dizzy" width="400">
+  <img src="docs/reactions.gif" alt="A cursor pets the buddy and it squishes and smiles, double-clicks it and it jumps, pets it a lot and it gets heart eyes, picks it up by the head so it swings along behind, then shakes it about until it's dizzy" width="400">
 </p>
 
-- Pet it and it's happy, and now and then it winks back. Double-click it and it jumps, startled. Keep petting it and it falls in love.
-- Grab it and it looks surprised. Drop it and it squashes as it lands. Shake it around while you carry it and it gets dizzy.
-- Hover over it and it tilts its head, curious.
+- Press on it and it squishes under your cursor, then springs back when you let go. Pet it and it's happy, and now and then it winks back. Double-click it and it jumps, startled. Keep petting it and it falls in love.
+- Pick it up and it looks surprised. Carry it around and it swings along behind your cursor, then sways to a stop. Drop it and it squashes as it lands. Shake it while you carry it and it gets dizzy.
+- Move your cursor onto it and it perks up. Hover a moment and it tilts its head, curious.
 - Leave your computer alone and it gets bored, then dozes off. It wakes up with a start when you come back.
 - Give it a new look and it pops up, surprised. Start the app and it wakes up with a stretch.
 
@@ -55,6 +55,8 @@ Then it just lives there. It sits on top of your windows, keeps an eye on your c
 **A warm welcome.** The first time you open DesktopBuddy, your new buddy introduces itself in speech bubbles. You name it (its face changes as you type), then try petting it, carrying it and giving it a new look. You can skip it, or replay it any time from the tray.
 
 **Lives in your tray.** The tray icon is your own buddy, and it changes whenever your buddy does.
+
+**Keeps itself up to date.** New versions download in the background, with a little progress ring floating over your buddy's head, and it tells you in a speech bubble when one is ready. Restart it there and then, or it updates the next time it closes. Either way, it pops back up on the new version, tells you so, and can show you what's new. You can see what's new any time from the tray.
 
 ## Make it yours
 
@@ -78,11 +80,23 @@ Everything saves automatically, and your buddy is waiting just as you left it ne
 
 DesktopBuddy is in early access, for **Windows 10 and 11 only** at the moment. It works, but it's new, so expect the odd rough edge.
 
-1. Download `DesktopBuddy-Windows-0.1.0-Setup.exe` from the newest release on the [releases page](https://github.com/jaineeldev/desktop_buddy/releases).
+1. Download the `DesktopBuddy-Windows-…-Setup.exe` file from the newest release on the [releases page](https://github.com/jaineeldev/desktop_buddy/releases).
 2. Run it. The installer isn't code-signed yet, so Windows SmartScreen may show "Windows protected your PC". Click **More info**, then **Run anyway**.
 3. Your new buddy wakes up and introduces itself.
 
 Want it there every time you log in? Right-click the DesktopBuddy icon in your system tray and tick **Start with Windows**.
+
+You only need to install it once. After that it keeps itself up to date, and your buddy tells you when a new version is ready. The one exception: if you installed the very first version (v0.1.0), download the newest one by hand once, because that version can't update itself.
+
+**What it can and can't access.** DesktopBuddy needs no admin rights and asks for no special permissions.
+
+- It reads where your mouse pointer is, so its eyes can follow it.
+- It saves your buddy's name and settings on your PC.
+- It connects to GitHub, and nothing else, to check for new versions. It doesn't collect or send any data about you.
+- It starts with Windows only if you tick that option in the tray.
+- It doesn't use your camera, microphone, location, clipboard or files.
+
+The SmartScreen warning is there because the installer isn't code-signed yet, not because of anything the app does.
 
 Found a bug or have an idea? [Open an issue](https://github.com/jaineeldev/desktop_buddy/issues). Early feedback shapes what comes next.
 
@@ -91,7 +105,6 @@ Found a bug or have an idea? [Open an issue](https://github.com/jaineeldev/deskt
 - **It notices your PC.** It reads your CPU and memory and reacts: stressed when your machine is working hard, sleepy when it's quiet.
 - **Stats at a glance.** A small panel beside your buddy with CPU, RAM and the time.
 - **Personality.** Time-of-day greetings and little comments in speech bubbles about what your computer is up to.
-- **Automatic updates.** Your buddy will let you know when there's a new version and update itself. Until then, grab new versions from the releases page.
 
 Windows comes first. Linux and macOS may follow later.
 
@@ -138,7 +151,7 @@ To build the Windows installer:
 npm run build
 ```
 
-It ends up in `release/<version>/` as `DesktopBuddy-Windows-<version>-Setup.exe`.
+It ends up in `release/<version>/` as `DesktopBuddy-Windows-<version>-Setup.exe`, next to a `.blockmap` and `latest.yml`. Upload all three to a GitHub release: the installed app reads `latest.yml` to find new versions, and the blockmap lets it download only what changed.
 
 If the build stops with "Cannot create symbolic link", turn on Windows Developer Mode and run it again. One of electron-builder's downloads contains macOS links that Windows only lets you create in that mode.
 
@@ -152,6 +165,7 @@ If the build stops with "Cannot create symbolic link", turn on Windows Developer
 | State | Zustand | Moods, plus settings saved between restarts |
 | System Stats | C (native Node addon via `node-addon-api`) *(planned)* | CPU, RAM via Windows API |
 | Packaging | electron-builder | Windows installer |
+| Updates | electron-updater | New versions from GitHub Releases, installed on restart |
 | AI Chat | Claude, GPT, Gemini, Ollama *(possible future)* | Typing to your buddy with your own API key |
 
 ### 📂 Project Structure
@@ -164,18 +178,22 @@ desktop_buddy/
 │   ├── preload.ts           # Secure contextBridge IPC
 │   ├── tray.ts              # Tray menu, with your buddy as the tray icon
 │   ├── cursor.ts            # Feeds the cursor position so the eyes can follow it
-│   ├── interaction.ts       # Click-through, dragging, shake detection, always-on-top
+│   ├── interaction.ts       # Click-through, dragging, carry speed, shake detection, always-on-top
+│   ├── updater.ts           # Checks GitHub Releases, downloads updates, installs on restart
 │   └── stats-bridge.ts      # (planned) Calls the C addon, exposes via IPC
 ├── src/
 │   ├── components/
 │   │   ├── Buddy/           # Face generator, moods, animation
 │   │   ├── Onboarding/      # The first-run intro
 │   │   ├── SettingsPanel/   # Right-click customise panel
-│   │   ├── SpeechBubble/    # What the buddy says
+│   │   ├── SpeechBubble/    # What the buddy says, and where the bubble goes
+│   │   ├── UpdateBubble/    # The buddy's news when an update is ready
+│   │   ├── WhatsNew/        # The what's new card shown after an update
 │   │   └── StatHUD/         # (planned)
 │   ├── hooks/               # Gaze, mouse handling, reactions, tray icon, (planned) system stats
 │   ├── stores/              # Buddy state and saved settings
 │   ├── dev/Gallery.tsx      # Face browser, opened with ?gallery
+│   ├── whatsNew.ts          # Release notes, in the buddy's voice
 │   └── App.tsx
 ├── native/                  # (planned) stats.c, stats.h, binding.gyp
 └── docs/                    # README artwork
@@ -201,9 +219,10 @@ DesktopBuddy is built in public, one phase at a time.
 - [x] Buddy states: `idle`, `happy`, `sleepy`, `stressed`, `angry`, `bored`
 - [x] More emotions: `surprised`, `sad`, `curious`, `confused`, `love` (heart eyes and floating hearts), `wink`, `focused`, `smug`, `dizzy`
 - [x] Use Framer Motion to morph between moods
-- [x] Implement an idle loop — buddy breathes, bobs and blinks on a timer
+- [x] Implement an idle loop — buddy breathes, bobs, sways and blinks on a timer
 - [x] Click interaction triggers `happy` state
 - [x] Reactions: petting, double-click, rapid petting, grab/drop/shake, hover, idle boredom and sleep, new looks, waking up on start
+- [x] Physics: squishes when pressed, wobbles when let go, swings when carried, and a body that follows its eyes
 - [x] Build `SpeechBubble` component (appears, holds, fades out)
 - [ ] Click interaction also shows a speech bubble
 
@@ -243,8 +262,10 @@ DesktopBuddy is built in public, one phase at a time.
 - [x] App icon (the pebble buddy) and a tray icon that shows your own buddy
 - [x] Package with `electron-builder` for Windows
 - [x] Auto-start on login (a tray toggle in the installed app)
-- [ ] Publish the installer as a GitHub release
-- [ ] Automatic updates from GitHub Releases (`electron-updater`), announced by the buddy in a speech bubble
+- [x] Publish the installer as a GitHub release
+- [x] Automatic updates from GitHub Releases (`electron-updater`), announced by the buddy in a speech bubble
+- [x] What's new card after each update, in the buddy's own words
+- [x] A smaller install (about 50 MB less), and idle breathing that runs on the GPU instead of redrawing the buddy every frame
 - [x] Multiple buddy looks: every name is a different buddy, plus six hand-drawn extras
 - [ ] JSON manifest per character: sprite paths + dialogue pools
 - [ ] Exportable/shareable config files

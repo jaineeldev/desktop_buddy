@@ -1,3 +1,12 @@
+/* Centred over (or under) the buddy, which sits in the middle of the window. See useBubblePlacement. */
+.bubble-anchor {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  justify-content: center;
+}
+
 .bubble {
   --b-bg: #111113;
   --b-line: #26262b;

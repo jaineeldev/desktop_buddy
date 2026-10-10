@@ -1,0 +1,40 @@
+/* The download ring: a small dark badge over the buddy's head, matching the speech bubbles. */
+.update-ring {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #111113;
+  border: 1px solid #26262b;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.35);
+  /* Only something to look at; clicks pass through to the desktop. */
+  pointer-events: none;
+}
+
+.update-ring svg {
+  display: block;
+}
+
+.update-ring-track,
+.update-ring-fill {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.update-ring-track {
+  stroke: #26262b;
+}
+
+.update-ring-fill {
+  stroke-linecap: round;
+}
+
+/* A little down arrow in the middle, so it reads as a download rather than a spinner. */
+.update-ring-arrow {
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

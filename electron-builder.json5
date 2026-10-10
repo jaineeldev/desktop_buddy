@@ -10,10 +10,23 @@
     "output": "release/${version}",
     "buildResources": "build"
   },
+  // Vite already bundles the page's libraries into dist, so only the updater ships in node_modules
+  // (see package.json). React and friends live in devDependencies for that reason.
   "files": [
     "dist",
     "dist-electron"
   ],
+  // Chromium ships translations of its own menus and messages in about 50 languages. The app is
+  // English-only, so keeping just these saves around 37 MB.
+  "electronLanguages": ["en-GB", "en-US"],
+  // Where the updater looks for new versions. Each release needs the Setup.exe, its .blockmap and latest.yml.
+  "publish": {
+    "provider": "github",
+    "owner": "jaineeldev",
+    "repo": "desktop_buddy",
+    // Early access releases go out as GitHub pre-releases.
+    "releaseType": "prerelease"
+  },
   "mac": {
     "target": [
       "dmg"

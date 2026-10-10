@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { randomBuddyName } from '../Buddy/names'
 import { SpeechBubble, TYPE_MS } from '../SpeechBubble/SpeechBubble'
+import { useBubblePlacement } from '../SpeechBubble/useBubblePlacement'
 import { useBuddyStore } from '../../stores/buddyStore'
-import './Onboarding.css'
 
 const STEPS = [
   'hello',
@@ -44,9 +44,6 @@ function resumeFrom(saved: string | null): Step | null {
   return step ? (RESUME_AT[step] ?? step) : null
 }
 
-/** How much room a bubble needs above the buddy before it flips underneath instead. */
-const BUBBLE_ROOM = 170
-
 /**
  * The first-run intro: the buddy talks you through naming it, petting it,
  * carrying it and customising it, waiting for you to try each one.
@@ -59,7 +56,7 @@ export function Onboarding({ startDelay }: { startDelay: number }) {
   const [resumed] = useState(() => resumeFrom(useBuddyStore.getState().introStep))
   const [step, setStep] = useState<Step | null>(resumed)
   const [draft, setDraft] = useState('')
-  const [below, setBelow] = useState(false)
+  const placement = useBubblePlacement(size)
   const [leaving, setLeaving] = useState(false)
   const originalName = useRef(name)
   // Counts when a "try it" step began, so only a new pet or drop moves things on.
@@ -94,13 +91,6 @@ export function Onboarding({ startDelay }: { startDelay: number }) {
   useEffect(() => {
     if (step) useBuddyStore.getState().update({ introStep: step })
   }, [step])
-
-  // Near the top of the screen there's no room above the buddy, so the bubble goes underneath.
-  useEffect(() => {
-    window.buddy?.getScreenSpace().then((space) => {
-      if (space) setBelow(window.innerHeight / 2 - size * 0.4 - Math.max(0, space.top) < BUBBLE_ROOM)
-    })
-  }, [size])
 
   // How the buddy feels as each step begins.
   useEffect(() => {
@@ -151,8 +141,6 @@ export function Onboarding({ startDelay }: { startDelay: number }) {
 
   if (!step) return null
 
-  const reach = size * 0.36 + 10
-  const place: CSSProperties = below ? { top: `calc(50% + ${reach}px)` } : { bottom: `calc(50% + ${reach}px)` }
   const skipLink = (
     <button type="button" className="bubble-skip" onClick={skip}>
       skip intro
@@ -231,8 +219,8 @@ export function Onboarding({ startDelay }: { startDelay: number }) {
   shownText.current = line.text
 
   return (
-    <div className="onboarding" style={place}>
-      <SpeechBubble text={line.text} tail={below ? 'up' : 'down'} leaving={leaving} onLeft={finish}>
+    <div className="bubble-anchor" style={placement.style}>
+      <SpeechBubble text={line.text} tail={placement.tail} leaving={leaving} onLeft={finish}>
         {line.extra}
       </SpeechBubble>
     </div>

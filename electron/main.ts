@@ -4,6 +4,7 @@ import path from 'node:path'
 import { createTray } from './tray'
 import { startCursorFeed } from './cursor'
 import { registerWindowControls } from './interaction'
+import { startUpdates } from './updater'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -76,7 +77,7 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 
-  createTray(win)
+  createTray(win, startUpdates(win))
   startCursorFeed(win)
 }
 

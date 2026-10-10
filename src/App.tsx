@@ -6,6 +6,8 @@ import { generateLook } from './components/Buddy/blob/generate'
 import { randomBuddyName } from './components/Buddy/names'
 import { Onboarding } from './components/Onboarding/Onboarding'
 import { SettingsPanel } from './components/SettingsPanel/SettingsPanel'
+import { UpdateBubble } from './components/UpdateBubble/UpdateBubble'
+import { WhatsNew } from './components/WhatsNew/WhatsNew'
 import { useDesktopInteraction } from './hooks/useDesktopInteraction'
 import { useReactions } from './hooks/useReactions'
 import { useTrayIcon } from './hooks/useTrayIcon'
@@ -17,7 +19,7 @@ const INTRO_DELAY_AT_LAUNCH_MS = 1_700
 const INTRO_DELAY_REPLAY_MS = 300
 
 function App() {
-  const { name, look, size, opacity, followCursor, alwaysOnTop, onboarded, mood, bounce, panelOpen } = useBuddyStore(
+  const { name, look, size, opacity, followCursor, alwaysOnTop, onboarded, mood, bounce, panelOpen, whatsNew } = useBuddyStore(
     useShallow((s) => ({
       name: s.name,
       look: s.look,
@@ -29,6 +31,7 @@ function App() {
       mood: shownMood(s),
       bounce: s.bounce,
       panelOpen: s.panelOpen,
+      whatsNew: s.whatsNew,
     })),
   )
   const launchedAt = useRef(Date.now())
@@ -60,17 +63,19 @@ function App() {
   useEffect(() => {
     const bridge = window.buddy
     if (!bridge) return
-    const { setName, openPanel, celebrate, update } = useBuddyStore.getState()
+    const { setName, openPanel, openWhatsNew, celebrate, update } = useBuddyStore.getState()
     const offFace = bridge.onNewFace(() => {
       setName(randomBuddyName())
       celebrate()
     })
     const offPanel = bridge.onOpenPanel(() => void openPanel())
     const offIntro = bridge.onReplayIntro(() => update({ onboarded: false, introStep: null }))
+    const offWhatsNew = bridge.onWhatsNew(() => void bridge.getVersion().then(openWhatsNew))
     return () => {
       offFace()
       offPanel()
       offIntro()
+      offWhatsNew()
     }
   }, [])
 
@@ -95,7 +100,9 @@ function App() {
         />
       </div>
       {!onboarded && <Onboarding startDelay={introDelay} />}
+      <UpdateBubble />
       <AnimatePresence>{panelOpen && <SettingsPanel key="settings" />}</AnimatePresence>
+      <AnimatePresence>{whatsNew && <WhatsNew key="whats-new" />}</AnimatePresence>
     </div>
   )
 }

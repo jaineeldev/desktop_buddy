@@ -21,6 +21,14 @@ declare namespace NodeJS {
   }
 }
 
+/**
+ * What the buddy should say about updates: one is ready, the answer to a check you asked for, goodbye
+ * before it restarts to install, or hello again once it has (that last one comes from the renderer).
+ */
+type UpdateNotice =
+  | { status: 'ready' | 'downloading' | 'updated'; version: string }
+  | { status: 'current' | 'failed' | 'restarting' }
+
 // Used in Renderer process, expose in `preload.ts`
 interface Window {
   ipcRenderer: import('electron').IpcRenderer
@@ -35,6 +43,15 @@ interface Window {
     /** How fast the buddy is being carried, in px per second; zero once it's let go. */
     onCarried(callback: (speed: { vx: number; vy: number }) => void): () => void
     onReplayIntro(callback: () => void): () => void
+    /** The tray asked to show what's new in this version. */
+    onWhatsNew(callback: () => void): () => void
+    onUpdate(callback: (notice: UpdateNotice) => void): () => void
+    /** How much of an update has downloaded, 0 to 100, or null once it's done or failed. */
+    onUpdateProgress(callback: (percent: number | null) => void): () => void
+    /** The running app's version, such as "0.2.0". */
+    getVersion(): Promise<string>
+    /** Restarts into a downloaded update. */
+    installUpdate(): void
     /** While true, clicks fall through the window to whatever is behind it. */
     setClickThrough(through: boolean): void
     /** The main process moves the window with the cursor between these two calls. */

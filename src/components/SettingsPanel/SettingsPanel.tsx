@@ -19,14 +19,12 @@ import {
 } from '../Buddy/blob/generate'
 import { traitsFor } from '../Buddy/blob/hash'
 import { randomBuddyName } from '../Buddy/names'
-import { OPACITY_RANGE, SIZE_RANGE, useBuddyStore, type ScreenSpace } from '../../stores/buddyStore'
+import { OPACITY_RANGE, SIZE_RANGE, useBuddyStore } from '../../stores/buddyStore'
+import { placePanel } from './placePanel'
 import './SettingsPanel.css'
 
 const PANEL_WIDTH = 288
 const PANEL_MAX_HEIGHT = 560
-/** Space between the buddy and the panel, and between the panel and the screen edge. */
-const GAP = 18
-const MARGIN = 10
 
 /** Ten hues spread around the wheel, each drawn in the buddy's current tone. */
 const HUES = [20, 50, 85, 130, 165, 200, 240, 275, 305, 340]
@@ -49,33 +47,6 @@ const EYE_SLIDERS: EyeSlider[] = [
   { key: 'eye.gazeY', label: 'height', invert: true },
   { key: 'eye.gazeX', label: 'sideways' },
 ]
-
-type Side = 'left' | 'right'
-
-/** Puts the panel beside the buddy on whichever side has room (unless told), kept inside the screen. */
-function placePanel(size: number, space: ScreenSpace | null, forceSide?: Side) {
-  const w = window.innerWidth
-  const h = window.innerHeight
-  const cx = w / 2
-  const cy = h / 2
-  // Decorations like petals reach about 0.4 of the buddy's box from its centre.
-  const reach = size * 0.4
-  const left = Math.max(0, space?.left ?? 0) + MARGIN
-  const right = Math.min(w, space?.right ?? w) - MARGIN
-  const top = Math.max(0, space?.top ?? 0) + MARGIN
-  const bottom = Math.min(h, space?.bottom ?? h) - MARGIN
-
-  const rightX = cx + reach + GAP
-  const leftX = cx - reach - GAP - PANEL_WIDTH
-  const fitsRight = rightX + PANEL_WIDTH <= right
-  const fitsLeft = leftX >= left
-  const side: Side =
-    forceSide ?? (fitsRight || (!fitsLeft && right - rightX >= leftX + PANEL_WIDTH - left) ? 'right' : 'left')
-
-  const height = Math.max(200, Math.min(PANEL_MAX_HEIGHT, bottom - top))
-  const y = Math.min(Math.max(cy - height / 2, top), bottom - height)
-  return { side, x: side === 'right' ? rightX : leftX, y, height }
-}
 
 /** Drops unset keys and empty objects, so "unpinned" never lingers in saved settings. */
 function compact<T extends object>(obj: T): T {
@@ -115,8 +86,8 @@ export function SettingsPanel() {
   }
 
   // The side is picked once on open, so resizing the buddy slides the panel along instead of flipping it.
-  const [side] = useState(() => placePanel(size, screenSpace).side)
-  const place = placePanel(size, screenSpace, side)
+  const [side] = useState(() => placePanel(size, screenSpace, PANEL_WIDTH, PANEL_MAX_HEIGHT).side)
+  const place = placePanel(size, screenSpace, PANEL_WIDTH, PANEL_MAX_HEIGHT, side)
 
   const hashed = useMemo(() => traitsFor(name), [name])
   const current = useMemo(() => generateLook(name, look), [name, look])

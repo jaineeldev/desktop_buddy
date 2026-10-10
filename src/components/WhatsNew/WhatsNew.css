@@ -1,0 +1,54 @@
+/* The what's new card borrows the customise panel's shell (.panel) and sizes itself to its notes. */
+.whats-new {
+  width: 268px;
+  height: auto;
+}
+
+.whats-new-head {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px 6px;
+}
+
+.whats-new-head h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.whats-new-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 16px 6px 32px;
+  /* Only scrolls on a very short screen; the same slim bar as the customise panel. */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--p-track) transparent;
+  color: var(--p-text);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.whats-new-list li::marker {
+  color: var(--p-faint);
+}
+
+.whats-new-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 14px 14px;
+}
+
+.panel .whats-new-done {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: var(--p-text);
+  color: var(--p-bg);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.panel .whats-new-done:hover {
+  background: #ffffff;
+}
