@@ -102,9 +102,10 @@ Found a bug or have an idea? [Open an issue](https://github.com/jaineeldev/deskt
 
 ## Coming soon
 
-- **It notices your PC.** It reads your CPU and memory and reacts: stressed when your machine is working hard, sleepy when it's quiet.
-- **Stats at a glance.** A small panel beside your buddy with CPU, RAM and the time.
-- **Personality.** Time-of-day greetings and little comments in speech bubbles about what your computer is up to.
+- **Feels at home.** It remembers where you left it, drops to your taskbar when you let go of it mid-air, and drifts off with floating z's.
+- **Notices what you're up to.** It bops along to your music, watches videos with you, and steps aside when one goes fullscreen.
+- **Knows your PC.** It reacts to your CPU and memory: stressed when your machine is working hard, sleepy when it's quiet. A small panel beside it shows CPU, RAM and the time.
+- **Personality.** Time-of-day greetings and little comments in speech bubbles.
 
 Windows comes first. Linux and macOS may follow later.
 
@@ -123,7 +124,7 @@ To be clear about how this app is made: AI has been used to help build DesktopBu
 
 ## 🛠️ Under the Hood
 
-Everything below is for developers and anyone curious about how DesktopBuddy is built. It's a hybrid stack: a modern web frontend for the buddy and its UI, and (coming soon) a C backend for low-level system access.
+Everything below is for developers and anyone curious about how DesktopBuddy is built. It's a hybrid stack: a modern web frontend for the buddy and its UI, and (planned) a C backend for low-level system access.
 
 ### How the faces work
 
@@ -201,74 +202,74 @@ desktop_buddy/
 
 ### 🗺️ Roadmap
 
-DesktopBuddy is built in public, one phase at a time.
+DesktopBuddy is built in public, one phase at a time. Ticked items have shipped; the rest is roughly in the order it'll happen.
 
-#### Phase 1 — Project Scaffold
-> Get a transparent, frameless Electron window on screen with a placeholder mascot.
+#### ✅ Shipped — v0.1 and v0.2
+> A buddy that lives on your desktop, looks like no one else's, and keeps itself up to date.
 
-- [x] Scaffold Electron + Vite + React (TypeScript template)
-- [x] Configure `BrowserWindow` for transparent + frameless + always-on-top
-- [x] Implement drag-to-move via mouse events
-- [x] Add system tray icon with show/hide/quit
-- [x] Render a placeholder mascot (a coloured shape is fine to start)
+**The buddy**
 
-#### Phase 2 — Mascot Animation System
-> A living mascot with at least 3 animation states.
+- [x] Faces generated from the buddy's name: ten body shapes, five eye styles and a full colour wheel, plus six hand-drawn extras
+- [x] Fifteen moods that morph smoothly into each other, including heart eyes and floating hearts for `love`
+- [x] Idle life: breathes, bobs, sways, blinks and glances around on its own timing
+- [x] Eyes that follow your cursor anywhere on screen, with a body that leans in to look
+- [x] Physics: squishes when pressed, wobbles when let go, swings when carried and squashes when dropped
+- [x] Reactions: petting, double-clicks, falling in love, grab, drop and shake, hover, boredom and sleep, new looks, waking up
+- [x] Customise panel: name, shape, eyes (with fine-tuning), colour, size, opacity and behaviour
 
-- [x] Design the mascot: SVG faces generated from the buddy's name
-- [x] Buddy states: `idle`, `happy`, `sleepy`, `stressed`, `angry`, `bored`
-- [x] More emotions: `surprised`, `sad`, `curious`, `confused`, `love` (heart eyes and floating hearts), `wink`, `focused`, `smug`, `dizzy`
-- [x] Use Framer Motion to morph between moods
-- [x] Implement an idle loop — buddy breathes, bobs, sways and blinks on a timer
-- [x] Click interaction triggers `happy` state
-- [x] Reactions: petting, double-click, rapid petting, grab/drop/shake, hover, idle boredom and sleep, new looks, waking up on start
-- [x] Physics: squishes when pressed, wobbles when let go, swings when carried, and a body that follows its eyes
-- [x] Build `SpeechBubble` component (appears, holds, fades out)
-- [ ] Click interaction also shows a speech bubble
+**The app**
 
-#### Phase 3 — C Stats Module
-> Write real C that reads system stats via the Windows API and exposes it to Electron.
+- [x] Transparent, always-on-top window where only the buddy catches clicks
+- [x] Tray menu, with your own buddy as the tray icon
+- [x] First-run intro in speech bubbles
+- [x] Windows installer, published on GitHub, with a Start with Windows option
+- [x] Automatic updates from GitHub Releases, with a download ring and a what's new card
+- [x] A smaller install, and idle breathing that runs on the GPU
+
+#### Next up — Feels at home
+> Quick fixes and little touches that make it nicer to live with.
+
+- [ ] Remember where you put it between launches, and bring it back on screen if a monitor is unplugged
+- [ ] Count typing as activity, so it doesn't doze off while you write without touching the mouse
+- [ ] A keyboard shortcut to hide and show it, for screen-sharing and presenting
+- [ ] Floating "z"s when it's asleep
+- [ ] Gravity: drop it in mid-air and it falls to the taskbar, landing with a squash
+- [ ] Edge peeking: push it against the screen edge and it hides half off-screen, peeking out
+- [ ] Belly rubs: hold and stroke it back and forth and it melts with happy eyes
+- [ ] Gets dizzy just watching you whip the cursor around
+- [ ] Click it and now and then it says something in a speech bubble
+
+#### Then — Notices what you're up to
+> It reacts to what's happening on your screen, without ever listening to your audio or reading your keys or files.
+
+- [ ] Bops along with floating music notes while music plays, using Windows' media info
+- [ ] Watches videos with you, and steps out of the way during fullscreen videos and games
+- [ ] Battery moods on laptops: sleepy when it's low, perky when it's charging
+- [ ] Time-of-day greetings (morning, afternoon, evening, late night)
+- [ ] A pool of things to say for each mood, so it never sounds like a recording
+
+#### Then — Knows your PC
+> Real C that reads system stats through the Windows API, and a buddy that reacts to them.
 
 - [ ] Set up `node-addon-api` in the project
-- [ ] Write `stats.c` — reads CPU usage via `GetSystemTimes`
-- [ ] Write `stats.c` — reads RAM usage via `GlobalMemoryStatusEx`
-- [ ] Compile to a `.node` native addon
-- [ ] Create `stats-bridge.ts` — IPC handler that calls the C addon
-- [ ] Create `useSystemStats` hook that polls via IPC every 2 seconds
+- [ ] Write `stats.c`: CPU usage via `GetSystemTimes` and RAM via `GlobalMemoryStatusEx`
+- [ ] Compile it to a `.node` native addon, called from `stats-bridge.ts` over IPC
+- [ ] A `useSystemStats` hook that polls every 2 seconds
+- [ ] `StatHUD`: a small panel beside the buddy with CPU, RAM and the time
+- [ ] Reacts to stats: stressed when your CPU is busy, sleepy when things are quiet
+- [ ] Comments on what your computer is up to
+- [ ] Stat toggles in the customise panel
 
-#### Phase 4 — Stat HUD
-> The mascot shows a compact stats panel on click or hover.
+#### Later — Little helpers and sharing
+> Ways it can help out, and ways to show it off.
 
-- [ ] Build `StatHUD` component — expandable panel anchored to the mascot
-- [ ] Display CPU %, RAM used/total, current time
-- [ ] Animate in/out with Framer Motion `AnimatePresence`
-- [ ] Mascot reacts to stats: high CPU → `stressed`, low RAM → `sleepy`
-
-#### Phase 5 — Personality & Dialogue
-> The buddy says things, has a name, and notices stuff.
-
-- [x] User-configurable buddy name, saved between restarts (the name also generates the face)
-- [ ] Dialogue system: a pool of lines per mood state
-- [ ] Buddy comments on stats contextually
-- [ ] Time-aware greetings (morning / afternoon / evening / late night)
-- [x] Settings panel: name, look, size, opacity, behaviour
-- [x] Eye customisation: style (dots, domes, squares, capsules, visor), size, width, spacing, squareness, tilt, height and sideways position
-- [ ] Stat toggles in the settings panel
-
-#### Phase 6 — Polish & Release
-> Wrap it up into something shareable.
-
-- [x] First-run onboarding: introduce the buddy, let the user name it, and show how to pet, drag and customise it
-- [x] App icon (the pebble buddy) and a tray icon that shows your own buddy
-- [x] Package with `electron-builder` for Windows
-- [x] Auto-start on login (a tray toggle in the installed app)
-- [x] Publish the installer as a GitHub release
-- [x] Automatic updates from GitHub Releases (`electron-updater`), announced by the buddy in a speech bubble
-- [x] What's new card after each update, in the buddy's own words
-- [x] A smaller install (about 50 MB less), and idle breathing that runs on the GPU instead of redrawing the buddy every frame
-- [x] Multiple buddy looks: every name is a different buddy, plus six hand-drawn extras
-- [ ] JSON manifest per character: sprite paths + dialogue pools
-- [ ] Exportable/shareable config files
+- [ ] Focus timer from the tray: a focused face while you work, and a celebration at break time
+- [ ] Gentle reminders, off by default: drink water, stretch, it's late so go to bed
+- [ ] Buddy codes: share your buddy (name and pinned look) as a short code a friend can paste in
+- [ ] Secret names that unlock a rare look or a reaction of their own
+- [ ] A friend for your buddy: two buddies that notice and react to each other
+- [ ] A small landing page on GitHub Pages with the GIFs and a download button
+- [ ] Free code signing (for example through SignPath Foundation) to drop the SmartScreen warning, once the project qualifies
 
 #### Possible Future — AI Chat
 > Being explored, not committed. Not started, and the details may change.
